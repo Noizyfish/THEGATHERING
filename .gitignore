@@ -15,3 +15,9 @@ noizystdz/reel/
 noizystdz/.venv/
 __pycache__/
 .pytest_cache/
+
+# noizybeast build output + rustdesk relay keys
+noizybeast/dist/
+noizybeast/src-tauri/target/
+noizybeast/remote/data/
+.venv/

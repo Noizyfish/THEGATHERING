@@ -21,6 +21,7 @@ All FOSS, all self-hosted, one manifest. Everything reads `empire/repos.json`.
 | Local inventory | Every git repo, loose project and document on the Mac + `/Volumes/*`, with **file birth dates** (`stat -f %B`), first/last commit, size, remote. Nightly via launchd, committed to the hub. | `scripts/gather-local.sh`, `scripts/nightly-local-inventory.sh`, `empire/stack/launchd/` |
 | Google | Drive (every file + `createdTime`), YouTube uploads, Gmail totals → `empire/google-inventory.json`, committed to the hub daily. FOSS path: `rclone lsjson --metadata`. | `empire/stack/n8n/google-inventory.json`, `scripts/gather-google.sh` |
 | Claude on GOD | Daily harvest of Claude Code project memory, a session index (first prompt/turns/times — never full transcripts), `~/.claude-worktrees` branches, Gemini `mc96_*` reports and every `CLAUDE.md` → pushed to `Noizyfish/CLAUDE-TODAY` under `days/YYYY-MM-DD/`. Secrets excluded. Runs inside the nightly job. | `scripts/gather-claude.sh` |
+| FOSS hitz | Every open-source dependency of the whole empire, licensed and verifiable: `empire/foss/hitz.json` → Brewfile / requirements / `GREATEST_HITZ.md`. `scripts/foss check` is the doctor. | `empire/foss/`, `scripts/foss`, `scripts/build-foss.mjs` |
 | Scripts | Same jobs with zero infrastructure: clone everything, or mirror everything. | `scripts/gather.sh`, `scripts/mirror-to-forgejo.sh` |
 | CLI | `empire gather / ask / brief / status / open` from any shell or launcher. | `scripts/empire` |
 

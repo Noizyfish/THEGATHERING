@@ -1,0 +1,25 @@
+{
+  "$comment": "ENGR app registry — every creator app on GOD and how ENGR can drive it. drivers: applescript | keycmd (System Events keystrokes, app must be frontmost) | mcu (Mackie Control over IAC MIDI bus) | shortcuts (`shortcuts run`) | cli | url | osc | files (watch/import folder). `scriptable` = has a real AppleScript dictionary.",
+  "iacBus": "ENGR MCU",
+  "apps": {
+    "Logic Pro":        { "bundle": "com.apple.logic10",         "role": "DAW — mix, edit, master NOIZYSTDZ sessions; LINA/GABRIEL/LUCY voice reels", "drivers": ["mcu", "keycmd", "files", "applescript"], "scriptable": false, "import": ["fcpxml", "aaf", "omf", "wav"], "notes": "No AppleScript dictionary beyond Standard Suite. Install Mackie Control on the ENGR MCU IAC bus (Control Surfaces → Setup → Install → Mackie Designs → Mackie Control). Key commands assume the US default preset; export yours to engr/logic/keycmds.json if customised." },
+    "Final Cut Pro":    { "bundle": "com.apple.FinalCut",        "role": "Video — demo edit, avatar renders + voice sync", "drivers": ["files", "keycmd", "applescript"], "scriptable": false, "import": ["fcpxml"], "notes": "FCPXML in/out is first-class; ENGR writes FCPXML for both Logic and FCP from the same session." },
+    "GarageBand":       { "bundle": "com.apple.garageband10",    "role": "Quick sketches on iPhone/iPad → Logic", "drivers": ["keycmd", "files"], "scriptable": false },
+    "MainStage":        { "bundle": "com.apple.mainstage3",      "role": "Live character voice rigs (alternative FX host)", "drivers": ["mcu", "keycmd"], "scriptable": false },
+    "Audio Hijack":     { "bundle": "com.rogueamoeba.audiohijack","role": "Routing/recording sessions (Cans, Program, Safety)", "drivers": ["applescript", "shortcuts"], "scriptable": true, "notes": "AppleScript: `tell application \"Audio Hijack\" to start session named \"Safety\"` (AH4). Also exposes Shortcuts actions." },
+    "Loopback":         { "bundle": "com.rogueamoeba.Loopback",  "role": "Virtual 16ch device NOIZYSTDZ IN", "drivers": ["applescript"], "scriptable": true, "notes": "Loopback 2.3+: enable/disable devices and sources by name." },
+    "SoundSource":      { "bundle": "com.rogueamoeba.soundsource","role": "Per-app output routing", "drivers": ["applescript"], "scriptable": true },
+    "Blender":          { "bundle": "org.blenderfoundation.blender","role": "LUCY/GABRIEL/LINA avatars, lip-sync, turntables", "drivers": ["cli"], "scriptable": false, "cli": "/Applications/Blender.app/Contents/MacOS/Blender -b {blend} -P {script}" },
+    "OBS":              { "bundle": "com.obsproject.obs-studio", "role": "Studio capture/stream of NOIZYSTDZ sessions", "drivers": ["cli", "osc"], "scriptable": false, "notes": "obs-websocket 5 on :4455 (use obsws-python)" },
+    "Keynote":          { "bundle": "com.apple.iWork.Keynote",   "role": "Friday deck", "drivers": ["applescript", "shortcuts"], "scriptable": true },
+    "Shortcuts":        { "bundle": "com.apple.shortcuts",       "role": "Glue to every device / Siri", "drivers": ["cli"], "scriptable": true, "cli": "shortcuts run {name} --input-path {path}" },
+    "Music":            { "bundle": "com.apple.Music",           "role": "Reference playback", "drivers": ["applescript"], "scriptable": true },
+    "QuickTime Player": { "bundle": "com.apple.QuickTimePlayerX","role": "Quick screen/audio captures", "drivers": ["applescript"], "scriptable": true },
+    "Terminal":         { "bundle": "com.apple.Terminal",        "role": "GORUNFREE", "drivers": ["applescript", "cli"], "scriptable": true },
+    "Safari":           { "bundle": "com.apple.Safari",          "role": "Hub page / Qatom console", "drivers": ["applescript", "url"], "scriptable": true },
+    "Visual Studio Code": { "bundle": "com.microsoft.VSCode",    "role": "Code", "drivers": ["cli"], "cli": "code {path}" },
+    "Claude":           { "bundle": "com.anthropic.claudefordesktop", "role": "Claude Desktop — MCP host", "drivers": ["url", "keycmd"], "url": "claude://" },
+    "Talon":            { "bundle": "com.talonvoice.Talon",      "role": "Voice control (50+ existing commands)", "drivers": ["files"], "notes": "ENGR writes .talon files into ~/.talon/user/engr/ so every ENGR action is a spoken command." },
+    "Stream Deck":      { "bundle": "com.elgato.StreamDeck",     "role": "One-hand buttons", "drivers": ["url", "cli"], "notes": "Buttons call `engr ...` via System: Open or a URL scheme." }
+  }
+}

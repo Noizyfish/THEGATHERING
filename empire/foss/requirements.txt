@@ -1,0 +1,13 @@
+# generated from hitz.json — uv pip install -r empire/foss/requirements.txt
+python-rtmidi  # python-rtmidi (RtMidi)
+soundfile  # libsndfile + python-soundfile
+numpy  # libsndfile + python-soundfile
+sounddevice  # python-sounddevice (PortAudio)
+HAP-python  # HAP-python
+mlx  # Apple MLX
+mlx-whisper  # mlx-whisper (OpenAI Whisper)
+mcp  # Model Context Protocol SDKs
+anthropic  # Anthropic SDKs + claude-agent-sdk
+claude-agent-sdk  # Anthropic SDKs + claude-agent-sdk
+pytest  # pytest + cryptography
+cryptography  # pytest + cryptography

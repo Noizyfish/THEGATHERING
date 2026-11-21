@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# FOSS GREATEST HITZ — install / check the open-source stack from empire/foss/hitz.json. macOS bash 3.2 safe.
+#   scripts/foss install [--optional]   brew bundle + uv venv (.venv at repo root) + npm globals
+#   scripts/foss check   [--optional]   run every `verify` → ✅/❌ table; exit 1 if any core hit is missing
+#   scripts/foss licenses               SPDX histogram
+#   scripts/foss list    [tier]         print hits
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+FOSS="$ROOT/empire/foss"
+MAN="$FOSS/hitz.json"
+cmd="${1:-check}"; shift || true
+OPTIONAL=0; TIER=""
+for a in "$@"; do case "$a" in --optional) OPTIONAL=1;; *) TIER="$a";; esac; done
+command -v jq >/dev/null || { echo "jq missing: brew install jq  (it is hit #4 for a reason)"; exit 2; }
+
+filter='.hitz[]'
+[ "$OPTIONAL" = 1 ] || filter="$filter | select(.optional != true)"
+[ -n "$TIER" ] && filter="$filter | select(.tier == \"$TIER\")"
+
+case "$cmd" in
+  list)
+    jq -r "$filter | \"\(.tier)\t\(.id)\t\(.license)\t\(.name)\"" "$MAN" | column -t -s $'\t' ;;
+  licenses)
+    jq -r '.hitz[].license' "$MAN" | sed 's# / #\n#g; s# OR #\n#g' | sort | uniq -c | sort -rn ;;
+  check)
+    fail=0; n=0
+    while IFS=$'\t' read -r id name opt verify; do
+      n=$((n+1))
+      if (cd "$ROOT" && bash -c "$verify" >/dev/null 2>&1); then printf '✅ %-22s %s\n' "$id" "$name"
+      else printf '❌ %-22s %s\n' "$id" "$name"; [ "$opt" = "true" ] || fail=$((fail+1)); fi
+    done < <(jq -r "$filter | [.id, .name, (.optional // false | tostring), .verify] | @tsv" "$MAN")
+    echo "— $n checked, $fail core missing"; [ "$fail" = 0 ] ;;
+  install)
+    [ "$(uname)" = Darwin ] || echo "⚠ not macOS — Brewfile step will likely fail; pip/npm steps still run"
+    command -v brew >/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    brew bundle --file "$FOSS/Brewfile"
+    [ "$OPTIONAL" = 1 ] && brew bundle --file "$FOSS/Brewfile.optional"
+    if command -v uv >/dev/null; then
+      [ -d "$ROOT/.venv" ] || uv venv "$ROOT/.venv" --python 3.12
+      uv pip install --python "$ROOT/.venv/bin/python" -r "$FOSS/requirements.txt"
+      [ "$OPTIONAL" = 1 ] && uv pip install --python "$ROOT/.venv/bin/python" -r "$FOSS/requirements.optional.txt"
+      echo "python: export NOIZYSTDZ_PY=$ROOT/.venv/bin/python"
+    fi
+    npm_files="$FOSS/npm.txt"; [ "$OPTIONAL" = 1 ] && npm_files="$npm_files $FOSS/npm.optional.txt"
+    cat $npm_files | grep -v '^#' | awk 'NF {print $1}' | while read -r pkg; do
+      npm ls -g --depth=0 "$pkg" >/dev/null 2>&1 || npm i -g "$pkg"
+    done
+    "$0" check $( [ "$OPTIONAL" = 1 ] && echo --optional ) || true ;;
+  *) sed -n '2,7p' "$0"; exit 2 ;;
+esac

@@ -187,6 +187,7 @@ case "$cmd" in
   run)        cmd_run "$@" ;;
   doctor)     cmd_doctor ;;
   signup)     exec "$here/scripts/empire-signup" "$@" ;;
+  foss)       exec "$here/scripts/foss" "$@" ;;
   stages)     for i in "${!STAGES[@]}"; do printf '%-8s %s\n' "${STAGES[$i]}" "${WHY[$i]}"; done ;;
   status)     cmd_status ;;
   gather)     call '{"action":"gather","source":"cli"}' | digest ;;

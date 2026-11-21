@@ -1,0 +1,20 @@
+# Self-hosted RustDesk relay for the NOIZY empire. Run on an always-on box with a public IP (Infomaniak Public Cloud VM is the
+# sovereign pick; a Raspberry Pi behind port-forwards also works). Cloudflare Tunnel is NOT suitable (raw TCP/UDP on many ports).
+# Ports: hbbs 21115/tcp 21116/tcp+udp 21118/tcp (web)  ·  hbbr 21117/tcp 21119/tcp (web)
+# After first start, `data/id_ed25519.pub` is the public key every client must set (RS_PUB_KEY) alongside the server address.
+services:
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: noizy-hbbs
+    command: hbbs -r ${RUSTDESK_RELAY_HOST:-relay.noizy.ai}:21117
+    volumes: [ "./data:/root" ]
+    network_mode: host
+    restart: unless-stopped
+    depends_on: [ hbbr ]
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: noizy-hbbr
+    command: hbbr
+    volumes: [ "./data:/root" ]
+    network_mode: host
+    restart: unless-stopped

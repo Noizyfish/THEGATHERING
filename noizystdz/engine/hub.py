@@ -15,6 +15,8 @@ from __future__ import annotations
 import argparse
 import json
 import queue
+import shutil
+import subprocess
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,7 +25,8 @@ from pathlib import Path
 from . import config as cfg
 from .consent import Consent, load_key, save, sign
 
-STATE: dict = {"session": None, "voice": None, "live": [], "consents": {}, "segments": []}
+STATE: dict = {"session": None, "voice": None, "live": [], "consents": {}, "segments": [], "fx": {}, "room": []}
+PRIVATE = ("10.", "192.168.", "127.", "172.16.", "172.17.", "172.18.", "172.19.", "172.2", "172.30.", "172.31.")
 SUBS: list[queue.Queue] = []
 LOCK = threading.Lock()
 
@@ -113,7 +116,10 @@ class H(BaseHTTPRequestHandler):
         n = int(self.headers.get("content-length") or 0)
         body = json.loads(self.rfile.read(n) or b"{}")
         if self.path == "/voice":
-            v = next((v for v in self.roster.get("voices", []) if v["id"] == body.get("id")), None)
+            if "preset" in body and "id" not in body:
+                v = dict(STATE["voice"] or {"id": "manual", "name": "manual"}); v["preset"] = body["preset"]
+            else:
+                v = next((v for v in self.roster.get("voices", []) if v["id"] == body.get("id")), None)
             if not v:
                 return self._json(404, {"error": "unknown voice"})
             STATE["voice"] = v
@@ -127,6 +133,22 @@ class H(BaseHTTPRequestHandler):
             STATE["consents"][c.speaker_id] = {"consent_id": c.consent_id, "scopes": c.scopes, "display_name": c.display_name}
             broadcast("state", STATE)
             return self._json(201, {"consent_id": c.consent_id})
+        if self.path == "/fx":
+            STATE["fx"].update({k: float(v) for k, v in body.items()})
+            (self.session_dir / "fx_live.json").write_text(json.dumps(STATE["fx"]))   # engine polls this for 14-bit knob moves
+            broadcast("fx", STATE["fx"])
+            return self._json(202, STATE["fx"])
+        if self.path == "/home/event":
+            if not self.client_address[0].startswith(PRIVATE):
+                return self._json(403, {"error": "LAN only"})
+            ev = {"event": body.get("event"), "t": __import__("time").time()}
+            STATE["room"] = (STATE["room"] + [ev])[-50:]
+            with (self.session_dir / "room_events.jsonl").open("a") as f:
+                f.write(json.dumps(ev) + "\n")
+            broadcast("room", ev)
+            if ev["event"] in ("door_open", "noise") and shutil.which("engr"):
+                subprocess.Popen(["engr", "logic", "marker"])
+            return self._json(202, ev)
         if self.path == "/segment":
             STATE["segments"] = (STATE["segments"] + [body])[-200:]
             broadcast("segment", body)

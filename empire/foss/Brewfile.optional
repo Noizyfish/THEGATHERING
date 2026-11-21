@@ -1,0 +1,8 @@
+# Optional tier — generated. brew bundle --file empire/foss/Brewfile.optional
+cask "ardour"  # Ardour · GPL-2.0-or-later
+cask "audacity"  # Audacity · GPL-3.0-or-later
+brew "whisper-cpp"  # whisper.cpp · MIT
+brew "llama.cpp"  # llama.cpp · MIT
+brew "wireguard-tools"  # WireGuard tools · GPL-2.0-only (kernel) / MIT (tools)
+brew "caddy"  # Caddy · Apache-2.0
+brew "dnscrypt-proxy"  # dnscrypt-proxy · ISC
