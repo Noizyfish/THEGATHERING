@@ -1,0 +1,159 @@
+{
+  "$comment": "NOIZYSTDZ channel map on BlackHole 16ch (48 kHz). Loopback builds the virtual devices, Audio Hijack routes sources into these channels, the engine captures all 16 at once. Channel numbers are 1-based here, 0-based in code. Each human track names the corpus its consented clips feed; tracks without a corpus are recorded for the session only.",
+  "device": "BlackHole 16ch",
+  "sampleRate": 48000,
+  "blockSize": 1024,
+  "returnDevice": "BlackHole 2ch",
+  "tracks": [
+    {
+      "ch": [
+        1,
+        2
+      ],
+      "id": "RSP",
+      "label": "RSP_001 \u2014 host (voice actor, C3, one-hand)",
+      "kind": "human",
+      "stt": true,
+      "record": true,
+      "fx": "clean",
+      "consentRequired": true,
+      "corpus": "NOIZYVOX-RSP"
+    },
+    {
+      "ch": [
+        3,
+        4
+      ],
+      "id": "LINA_SRC",
+      "label": "LINA \u2014 voiced by RSP's wife (XLR in 3-4). Human source for the LINA model; her consent, her key, her corpus.",
+      "kind": "human",
+      "stt": true,
+      "record": true,
+      "fx": "clean",
+      "consentRequired": true,
+      "corpus": "NOIZYVOX-LINA"
+    },
+    {
+      "ch": [
+        5,
+        6
+      ],
+      "id": "GUEST_B",
+      "label": "Guest B (remote \u2014 kMeet/FaceTime/Discord via Loopback)",
+      "kind": "human",
+      "stt": true,
+      "record": true,
+      "fx": "clean",
+      "consentRequired": true,
+      "corpus": null
+    },
+    {
+      "ch": [
+        7,
+        8
+      ],
+      "id": "GUEST_C",
+      "label": "Guest C (remote)",
+      "kind": "human",
+      "stt": true,
+      "record": true,
+      "fx": "clean",
+      "consentRequired": true,
+      "corpus": null
+    },
+    {
+      "ch": [
+        9,
+        10
+      ],
+      "id": "GABRIEL",
+      "label": "GABRIEL TTS return (voice-service :9799)",
+      "kind": "synthetic",
+      "stt": true,
+      "record": true,
+      "fx": null,
+      "consentRequired": false
+    },
+    {
+      "ch": [
+        11,
+        12
+      ],
+      "id": "LUCY",
+      "label": "LUCY (iPhone 15 Pro Max via Continuity/Loopback)",
+      "kind": "synthetic",
+      "stt": true,
+      "record": true,
+      "fx": null,
+      "consentRequired": false
+    },
+    {
+      "ch": [
+        13,
+        14
+      ],
+      "id": "FX_RETURN",
+      "label": "Processed character voice (engine output \u2192 BlackHole 2ch \u2192 here for monitoring)",
+      "kind": "processed",
+      "stt": false,
+      "record": true,
+      "fx": null,
+      "consentRequired": false
+    },
+    {
+      "ch": [
+        15,
+        16
+      ],
+      "id": "PROGRAM",
+      "label": "Program mix (what guests hear) \u2014 reference only, never trains",
+      "kind": "mix",
+      "stt": false,
+      "record": true,
+      "fx": null,
+      "consentRequired": false
+    }
+  ],
+  "stt": {
+    "engine": "mlx-whisper",
+    "model": "mlx-community/whisper-large-v3-turbo",
+    "fallback": "faster-whisper:large-v3-turbo",
+    "language": "en",
+    "minSegmentSec": 0.6,
+    "maxSegmentSec": 20,
+    "vadThresholdDb": -42,
+    "hangoverMs": 350
+  },
+  "hub": {
+    "host": "0.0.0.0",
+    "port": 9790,
+    "gabrielDaemon": "http://127.0.0.1:9777",
+    "voiceService": "http://127.0.0.1:9799"
+  },
+  "dataset": {
+    "root": "sessions",
+    "corpus": "NOIZYVOX",
+    "targetSampleRate": 24000,
+    "minSec": 1.0,
+    "maxSec": 15.0,
+    "loudnessLUFS": -23
+  },
+  "models": {
+    "GABRIEL": {
+      "voiceSource": "RSP",
+      "corpus": "NOIZYVOX-RSP",
+      "host": "M2 Ultra"
+    },
+    "LUCY": {
+      "voiceSource": "RSP",
+      "corpus": "NOIZYVOX-RSP",
+      "host": "iPhone 15 Pro Max"
+    },
+    "LINA": {
+      "voiceSource": "LINA_SRC",
+      "corpus": "NOIZYVOX-LINA",
+      "host": "M2 Ultra",
+      "status": "new \u2014 first sessions week of 2026-11-22"
+    }
+  }
+}
