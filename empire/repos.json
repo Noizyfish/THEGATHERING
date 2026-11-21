@@ -249,7 +249,7 @@
       "owner": "Noizyfish",
       "tier": "tooling",
       "brand": "NOIZY.AI",
-      "role": "Daily Claude / Anthropic workspace.",
+      "role": "Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD.",
       "visibility": "private",
       "createdAt": "2026-03-27",
       "pushedAt": "2026-03-27"

@@ -22,6 +22,7 @@ scripts/gather-local.sh --docs       # on the M2 Ultra: inventory repos, loose p
 scripts/gather-local.sh --push       # …and push every local git repo into Forgejo
 scripts/mirror-to-forgejo.sh --all   # pull-mirror every GitHub repo into Forgejo
 scripts/gather-google.sh             # Drive inventory via rclone (or the n8n Google workflow)
+scripts/gather-claude.sh             # Claude Code memory/sessions/worktrees on GOD → Noizyfish/CLAUDE-TODAY
 node scripts/build-empire.mjs        # regenerate empire/EMPIRE.md
 scripts/empire ask "what did I build in April 2026?"
 ```

@@ -8,6 +8,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 git pull -q --ff-only || true
 scripts/gather-local.sh ${GATHER_LOCAL_ARGS:-} 
+scripts/gather-claude.sh || echo "gather-claude failed (non-fatal)"
 node scripts/build-empire.mjs
 if ! git diff --quiet -- empire/local-inventory.json empire/EMPIRE.md; then
   git add empire/local-inventory.json empire/EMPIRE.md

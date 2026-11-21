@@ -45,7 +45,7 @@ _No Google inventory yet. Import `empire/stack/n8n/google-inventory.json` into n
   - `GitHub` [Noizyfish/NOIZYFISH_THE_AQAURIUM](https://github.com/Noizyfish/NOIZYFISH_THE_AQAURIUM) · THE-AQUARIUM · Audio vault, 40-year collection. CLIENT#1 RSP001.
   - `GitHub` [Noizyfish/desktop-tutorial](https://github.com/Noizyfish/desktop-tutorial) · personal · GitHub Desktop tutorial repository.
 - **2026-03**
-  - `GitHub` [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) · NOIZY.AI · Daily Claude / Anthropic workspace.
+  - `GitHub` [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) · NOIZY.AI · Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD.
   - `GitHub` [Noizyfish/swift-library](https://github.com/Noizyfish/swift-library) · NOIZYLAB · Swift library scaffolding.
 - **2026-04**
   - `GitHub` [RSPNOIZY/NOIZYKIDZ](https://github.com/RSPNOIZY/NOIZYKIDZ) · NOIZYKIDZ · Youth division. Haptic music education. Deaf-first. Autism-calm. Every kid plays. _(→ 2026-05-06)_
@@ -193,7 +193,7 @@ Candidates to merge or delete. A local clone of its own GitHub repo is fine; two
 | [Noizyfish/MC96-Mission-Control](https://github.com/Noizyfish/MC96-Mission-Control) | MC96 | MC96 Zero Latency AI Mission Control. | Python | public | 2025-12-18 | 2025-12-18 |
 | [Noizyfish/CODEMASTER](https://github.com/Noizyfish/CODEMASTER) | NOIZYLAB | Code archive: legacy scripts, backups and archived code. | — | public | 2025-12-23 | 2025-12-23 |
 | [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) | NOIZYLAB | Shell automation and lab scripts. | Shell | public | 2025-12-28 | 2026-11-06 |
-| [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) | NOIZY.AI | Daily Claude / Anthropic workspace. | — | private | 2026-03-27 | 2026-03-27 |
+| [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) | NOIZY.AI | Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD. | — | private | 2026-03-27 | 2026-03-27 |
 | [Noizyfish/swift-library](https://github.com/Noizyfish/swift-library) | NOIZYLAB | Swift library scaffolding. | Swift | private | 2026-03-30 | 2026-03-30 |
 | [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) | NOIZYLAB | Canonical upstream of this hub. Research lab + shared tooling core (MC96 common, Gabriel, voice engine, LIFELUV). — [site](https://noizylab.ca) | TypeScript | public | 2026-04-05 | 2026-05-30 |
 | [Noizyfish/aeon-magick-ai-computer-control](https://github.com/Noizyfish/aeon-magick-ai-computer-control) | NOIZY.AI | Universal AI computer-control KVM (REST API + MCP) with private networking stack. | Rust | public | 2026-10-05 | 2026-09-23 |
