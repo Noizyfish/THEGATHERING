@@ -34,6 +34,8 @@ _No local inventory yet. Run `scripts/gather-local.sh` on the M2 Ultra with the 
 
 _No Google inventory yet. Import `empire/stack/n8n/google-inventory.json` into n8n (Drive + YouTube + Gmail) or run `scripts/gather-google.sh` with rclone._
 
+_No Cloudflare inventory yet. `empire signup cloudflare` then `empire run --only cloudflare` to pull every zone, Worker, D1, KV, R2, Pages, Access app and tunnel into the story._
+
 - **2025-12**
   - `GitHub` [Noizyfish/GABRIEL](https://github.com/Noizyfish/GABRIEL) · GABRIEL · Gabriel agent master code location. _(→ 2026-09-20)_
   - `GitHub` [Noizyfish/NOIZYLAB-GABRIEL](https://github.com/Noizyfish/NOIZYLAB-GABRIEL) · GABRIEL · Gabriel master code location (earlier edition). _(→ 2026-04-04)_

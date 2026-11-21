@@ -22,7 +22,10 @@ if [[ $dry -eq 0 ]]; then
   git -C "$dest" pull -q --ff-only 2>/dev/null || true
 fi
 day="$dest/days/$today"
-[[ $dry -eq 0 ]] && mkdir -p "$day"/{claude-memory,claude-sessions,gemini,worktrees,claude-md}
+if [[ $dry -eq 0 ]]; then
+  mkdir -p "$day"/{claude-memory,claude-sessions,gemini,worktrees,claude-md}
+  : > "$day/claude-sessions/index.jsonl"; : > "$day/worktrees/index.tsv"
+fi
 
 put() { # put <src> <dst-subdir>
   local src="$1" sub="$2"
@@ -43,7 +46,6 @@ for mem in "$HOME"/.claude/projects/*/memory; do
 done
 
 # 2. Session transcripts → lightweight index (first user message, turn count, date). Never the full transcript.
-if [[ $dry -eq 0 ]]; then : > "$day/claude-sessions/index.jsonl"; fi
 for jsonl in "$HOME"/.claude/projects/*/*.jsonl; do
   [[ -f "$jsonl" ]] || continue
   proj="$(basename "$(dirname "$jsonl")")"
@@ -58,7 +60,6 @@ done
 
 # 3. Claude worktrees: just the branch list + last commit per worktree
 if [[ -d "$HOME/.claude-worktrees" ]]; then
-  if [[ $dry -eq 0 ]]; then : > "$day/worktrees/index.tsv"; fi
   find "$HOME/.claude-worktrees" -maxdepth 3 -name .git -prune -print 2>/dev/null | while read -r g; do
     wt="$(dirname "$g")"
     [[ $dry -eq 1 ]] && { echo "  would index worktree $wt"; continue; }
@@ -103,5 +104,5 @@ cd "$dest"
 git add -A
 if git diff --cached --quiet; then echo "no changes"; exit 0; fi
 git -c user.name="${GIT_AUTHOR_NAME:-gabriel-nightly}" -c user.email="${GIT_AUTHOR_EMAIL:-gabriel@noizy.ai}" commit -q -m "harvest: $today"
-git push -q -u origin HEAD
+git push -q -u origin HEAD || { echo "push failed — run: gh auth setup-git" >&2; exit 1; }
 echo "pushed $repo ($today)"

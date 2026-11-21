@@ -4,3 +4,6 @@ empire/stack/.env
 *.log
 node_modules/
 .DS_Store
+
+# empire run state
+empire/.state/
