@@ -1,0 +1,18 @@
+:root{--bg:#0b0b10;--panel:#14141c;--fg:#eee;--mute:#888;--acc:#06d6a0;--rec:#e63946;--amb:#ffd166}
+*{box-sizing:border-box}body{margin:0;display:grid;grid-template-columns:200px 1fr;height:100vh;font:15px/1.4 -apple-system,system-ui;background:var(--bg);color:var(--fg)}
+#rail{background:var(--panel);padding:2.6rem .8rem 1rem;display:flex;flex-direction:column;gap:.3rem;-webkit-app-region:drag}
+#rail h1{font-weight:900;letter-spacing:.08em;font-size:1.1rem;margin:0 0 1rem}#rail h1 span{color:var(--acc)}
+#rail button{-webkit-app-region:no-drag;text-align:left;font:inherit;padding:.6rem .8rem;border:0;border-radius:.6rem;background:transparent;color:var(--fg);cursor:pointer}
+#rail button.on,#rail button:hover{background:#2a2a3a}#status{margin-top:auto;color:var(--mute);font-size:.8rem}
+main{overflow:hidden}.panel{display:none;height:100%;flex-direction:column;padding:1rem}.panel.on{display:flex}
+header{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem}header h2{margin:0;font-size:1.2rem}.xport{display:flex;gap:.4rem;flex-wrap:wrap}
+button,select,input{font:inherit;padding:.55rem .9rem;border-radius:.6rem;border:1px solid #2a2a3a;background:#1c1c26;color:var(--fg)}
+button{cursor:pointer}button.rec{background:var(--rec);color:#fff;font-weight:700}
+.log{flex:1;overflow:auto;background:var(--panel);border-radius:.8rem;padding:.8rem;font-family:ui-monospace,Menlo,monospace;font-size:.85rem;white-space:pre-wrap}
+.cols{display:grid;grid-template-columns:1fr 320px;gap:1rem;flex:1;min-height:0}.cols .log{height:100%}
+aside#reel{background:var(--panel);border-radius:.8rem;padding:.8rem;overflow:auto}aside h3{margin:0 0 .5rem}
+#reelgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}#reelgrid span{aspect-ratio:1;border-radius:4px;background:#2a2a3a;font-size:.6rem;display:grid;place-items:center}#reelgrid span.done{background:var(--acc);color:#000}
+.seg{padding:.2rem 0;border-bottom:1px solid #222}.seg b{color:#8ecae6}.seg i{color:var(--amb)}
+iframe{flex:1;border:0;border-radius:.8rem;background:#000}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem;margin-bottom:1rem}.grid button{padding:1rem}.grid button.hot{background:var(--rec)}
+form{display:flex;gap:.5rem;margin-top:.6rem}form input{flex:1}.muted{color:var(--mute)}code{background:#1c1c26;padding:.1rem .4rem;border-radius:.3rem}

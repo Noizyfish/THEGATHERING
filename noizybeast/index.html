@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>NOIZYBEAST.IDE</title><link rel="stylesheet" href="/src/beast.css"></head>
+<body>
+<nav id="rail" aria-label="Panels">
+  <h1>NOIZY<span>BEAST</span></h1>
+  <button data-panel="studio" class="on" aria-label="Studio panel">◉ Studio</button>
+  <button data-panel="engr" aria-label="ENGR console">⚙ ENGR</button>
+  <button data-panel="surface" aria-label="Open Stage Control surface">▦ Surface</button>
+  <button data-panel="room" aria-label="Room and HomeKit">⌂ Room</button>
+  <button data-panel="remote" aria-label="RustDesk remote">⇄ Remote</button>
+  <button data-panel="thruline" aria-label="Empire thru-line">∞ Thru-line</button>
+  <div id="status" aria-live="polite">hub: … · midi: … · voice: —</div>
+</nav>
+<main>
+  <section id="studio" class="panel on"><header><h2>NOIZYSTDZ</h2><div class="xport">
+    <button id="roll" class="rec" aria-label="Roll — record">● ROLL</button><button id="stop" aria-label="Stop">■ STOP</button><button id="mark" aria-label="Drop marker">⚑ MARK</button>
+    <select id="voice" aria-label="Current voice"></select><button id="consent" aria-label="Sign consent">✎ CONSENT</button></div></header>
+    <div class="cols"><div id="transcript" class="log" aria-label="Live transcript"></div><aside id="reel"><h3>50 for Friday</h3><div id="reelgrid"></div></aside></div></section>
+  <section id="engr" class="panel"><header><h2>ENGR</h2></header>
+    <div class="log" id="engrlog"></div><form id="engrform"><input id="engrcmd" placeholder='engr …  or plain words: "roll it", "lock up", "lina time"' aria-label="ENGR command" autocomplete="off"><button>run</button></form></section>
+  <section id="surface" class="panel"><header><h2>Open Stage Control · 14-bit</h2><input id="oscurl" value="http://127.0.0.1:8080" aria-label="O-S-C URL"><button id="oscgo">load</button></header><iframe id="oscframe" title="Open Stage Control"></iframe></section>
+  <section id="room" class="panel"><header><h2>Room · HomeKit</h2></header><div id="scenes" class="grid"></div><div id="accs" class="grid"></div><div id="roomlog" class="log"></div></section>
+  <section id="remote" class="panel"><header><h2>RustDesk</h2></header>
+    <p>This machine's RustDesk ID: <code id="rdid">…</code></p>
+    <form id="rdform"><input id="rdtarget" placeholder="GOD RustDesk ID (digits)" aria-label="Target RustDesk ID"><input id="rdpass" type="password" placeholder="password (optional)" aria-label="Password"><button>connect</button></form>
+    <p class="muted">Relay: self-hosted hbbs/hbbr — see <code>remote/README.md</code>. Password is passed to RustDesk only, never stored here.</p></section>
+  <section id="thruline" class="panel"><header><h2>Thru-line</h2><button id="gather">empire run</button></header><pre id="thru" class="log"></pre></section>
+</main>
+<script type="module" src="/src/main.ts"></script></body></html>

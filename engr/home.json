@@ -1,0 +1,36 @@
+{
+  "$comment": "HomeKit map for NOIZYSTDZ. Scene/accessory names here are the contract between ENGR and Shortcuts; HomeKit names are yours (rename to match your Home).",
+  "scenes": {
+    "standby":  { "shortcut": "ENGR Scene Standby",  "homeScene": "Studio Standby",  "why": "room lights 40% warm, ON AIR off, monitors on, booth fan on" },
+    "session":  { "shortcut": "ENGR Scene Session",  "homeScene": "Studio Session",  "why": "key light on performer, booth fan OFF (noise), front door locked, phones DND via Focus" },
+    "record":   { "shortcut": "ENGR Scene Record",   "homeScene": "Studio Record",   "why": "ON AIR red, hallway light red, HomePods pause, thermostat fan off" },
+    "playback": { "shortcut": "ENGR Scene Playback", "homeScene": "Studio Playback", "why": "ON AIR amber, room 60%, HomePods as monitors (AirPlay from GOD)" },
+    "sleep":    { "shortcut": "ENGR Scene Sleep",    "homeScene": "Studio Sleep",    "why": "LINA sleep takes: 5% 2200K, every fan + fridge plug off, door locked, 20:00+ only" },
+    "wrap":     { "shortcut": "ENGR Scene Wrap",     "homeScene": "Studio Wrap",     "why": "everything off except path light; unlock door; Safety recording stops (via hub)" },
+    "friday":   { "shortcut": "ENGR Scene Friday",   "homeScene": "Studio Friday",   "why": "demo for Nicholas AC Mumford: lights 70% neutral, Apple TV on, HomePods paired stereo, ON AIR off" }
+  },
+  "accessories": {
+    "onair":     { "homeName": "ON AIR",          "kind": "light",      "states": ["on", "off", "red", "amber"] },
+    "keylight":  { "homeName": "Key Light",       "kind": "light",      "states": ["on", "off", "50%", "100%"] },
+    "boothfan":  { "homeName": "Booth Fan",       "kind": "plug",       "states": ["on", "off"] },
+    "door":      { "homeName": "Studio Door",     "kind": "lock",       "states": ["lock", "unlock"] },
+    "homepods":  { "homeName": "Studio HomePods", "kind": "speaker",    "states": ["play", "pause", "volume 20", "volume 50"] },
+    "appletv":   { "homeName": "Studio Apple TV", "kind": "tv",         "states": ["on", "off"] },
+    "thermostat":{ "homeName": "Studio Thermostat","kind": "thermostat","states": ["fan off", "fan auto", "20C", "22C"] }
+  },
+  "triggers": [
+    { "when": "Studio Door opens during a session",      "post": "http://GOD.local:9790/home/event", "body": { "event": "door_open" },    "effect": "hub marks transcript 'door opened'; if recording → ENGR drops a Logic marker" },
+    { "when": "Booth motion detected, no session",       "post": "http://GOD.local:9790/home/event", "body": { "event": "booth_motion" }, "effect": "scene standby + 'someone's in the booth' spoken on GOD" },
+    { "when": "Noise sensor > 60 dB during record",      "post": "http://GOD.local:9790/home/event", "body": { "event": "noise" },        "effect": "transcript marker 'NOISE' so the take is flagged in the dataset builder" },
+    { "when": "Front door unlocked by LINA's code",      "post": "http://GOD.local:9790/home/event", "body": { "event": "lina_arrived" }, "effect": "say 'LINA is here' · scene session · open hub on the booth iPad" },
+    { "when": "Sunset",                                  "post": "http://GOD.local:9790/home/event", "body": { "event": "sunset" },       "effect": "if session date has LINA sleep pieces → scene sleep at 20:00" }
+  ],
+  "hubToHome": {
+    "$comment": "What the NOIZYSTDZ hub does with the room (hub → engr home ...). Implemented in noizystdz/engine/hub.py /home/event and on state changes.",
+    "on_session_start": "scene session",
+    "on_record_start":  "scene record",
+    "on_record_stop":   "scene playback",
+    "on_voice_category_sleep": "scene sleep",
+    "on_session_end":   "scene wrap"
+  }
+}

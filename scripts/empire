@@ -1,0 +1,206 @@
+#!/usr/bin/env bash
+# `empire` — GORUNFREE. One command = everything done.
+#
+#   empire run                 full pipeline: pull → repos → local → google → claude → cloudflare → build → publish → mirror → digest
+#   empire run --from build    resume from a stage          empire run --only local,build   just these stages
+#   empire run --dry-run       show the plan, touch nothing  empire run --quiet              no voice / notification
+#   empire doctor              readiness: tools, creds, endpoints, last run
+#   empire signup [provider]   guided sign-up + verify: cloudflare | proton | infomaniak | todaq  (scripts/empire-signup)
+#   empire status              manifest + inventories + last run
+#   empire gather | gather-all | ask "q" | brief owner/name | open NAME     (via n8n webhook, same as Siri)
+#   empire stages              list pipeline stages
+#
+# Env: EMPIRE_WEBHOOK_URL, EMPIRE_WEBHOOK_KEY (=INTENT_SHARED_SECRET), NOIZY_ROOT, GATHER_LOCAL_ARGS, EMPIRE_VOICE=0 to mute.
+# Reads empire/stack/.env if present. State: empire/.state/last-run.json (gitignored).
+set -uo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[[ -f "$here/empire/stack/.env" ]] && set -a && . "$here/empire/stack/.env" && set +a
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+url="${EMPIRE_WEBHOOK_URL:-${N8N_WEBHOOK_URL:-http://localhost:5678/}webhook/empire}"
+key="${EMPIRE_WEBHOOK_KEY:-${INTENT_SHARED_SECRET:-}}"
+manifest="$here/empire/repos.json"
+state_dir="$here/empire/.state"; state="$state_dir/last-run.json"
+command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
+is_mac() { [[ "$(uname -s)" == "Darwin" ]]; }
+
+# ── webhook (Siri parity) ────────────────────────────────────────────────────
+call() {
+  [[ -n "$key" ]] || { echo "set EMPIRE_WEBHOOK_KEY (or INTENT_SHARED_SECRET)" >&2; return 1; }
+  curl -sS --max-time 240 -X POST "$url" -H "Content-Type: application/json" -H "X-Noizy-Key: $key" -d "$1"
+}
+digest() { jq -r 'if .ok then "\(.date) · \(.repoCount) repos · \(.mirrored) new mirrors\n\n\(.digest)" else "error: \(.error)" end'; }
+
+# ── pipeline ─────────────────────────────────────────────────────────────────
+# bash 3.2 compatible (macOS /bin/bash): parallel indexed arrays, no declare -A
+STAGES=(pull repos local google claude cloudflare build publish mirror digest)
+WHY=(
+  "fast-forward the hub so we build on the latest story"
+  "clone/ff every manifest repo into \$NOIZY_ROOT (scripts/gather.sh)"
+  "inventory this Mac + drives with birth dates (scripts/gather-local.sh)"
+  "inventory Google Drive via rclone (scripts/gather-google.sh)"
+  "harvest Claude Code memory/sessions → CLAUDE-TODAY (scripts/gather-claude.sh)"
+  "inventory ALL Cloudflare: zones, Workers, D1, KV, R2, Pages, Access, tunnels + wrangler.toml drift (scripts/cloudflare-inventory.sh)"
+  "regenerate empire/EMPIRE.md from manifest + inventories"
+  "commit + push inventories and the map to the hub"
+  "pull-mirror every repo into Forgejo (scripts/mirror-to-forgejo.sh)"
+  "ask Claude for today's thru-line via n8n (webhook)"
+)
+R=(); T=()   # result / seconds per stage, indexed like STAGES
+idx() { local i; for i in "${!STAGES[@]}"; do [[ "${STAGES[$i]}" == "$1" ]] && { echo "$i"; return 0; }; done; return 1; }
+dry=0; quiet=0; from=""; only=""
+
+skip() { printf 'SKIP:%s\n' "$2"; }   # stages run in a subshell; signal via output
+stage_pull()    { git -C "$here" pull -q --ff-only 2>&1 | tail -1; }
+stage_repos()   { command -v git >/dev/null || { skip repos "git missing"; return 0; }; "$here/scripts/gather.sh" ${GATHER_REPOS_ARGS:-} 2>&1 | tail -2; }
+stage_local()   { "$here/scripts/gather-local.sh" ${GATHER_LOCAL_ARGS:-} 2>&1 | tail -2; return "${PIPESTATUS[0]}"; }
+stage_google()  { command -v rclone >/dev/null || { skip google "rclone not installed"; return 0; }
+                  rclone listremotes 2>/dev/null | grep -q "^${GOOGLE_REMOTE:-gdrive}:" || { skip google "no rclone remote '${GOOGLE_REMOTE:-gdrive}'"; return 0; }
+                  "$here/scripts/gather-google.sh" --remote "${GOOGLE_REMOTE:-gdrive}:" 2>&1 | tail -2; }
+stage_claude()  { [[ -d "$HOME/.claude" ]] || { skip claude "no ~/.claude on this machine"; return 0; }; "$here/scripts/gather-claude.sh" 2>&1 | tail -2; }
+stage_cloudflare() { [[ -n "${CLOUDFLARE_API_TOKEN:-}" && -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]] || { skip cloudflare "CLOUDFLARE_API_TOKEN/ACCOUNT_ID not set (empire signup cloudflare)"; return 0; }
+                  "$here/scripts/cloudflare-inventory.sh" 2>&1 | tail -3; return "${PIPESTATUS[0]}"; }
+stage_build()   { command -v node >/dev/null || { echo "node missing"; return 1; }; node "$here/scripts/build-empire.mjs" 2>&1 | tail -1; return "${PIPESTATUS[0]}"; }
+stage_publish() {
+  cd "$here"
+  local files=(empire/EMPIRE.md empire/local-inventory.json empire/google-inventory.json empire/cloudflare-inventory.json empire/repos.json)
+  local changed; changed=$(git status --porcelain -- "${files[@]}" 2>/dev/null)
+  [[ -n "$changed" ]] || { skip publish "nothing changed"; return 0; }
+  git add -- "${files[@]}" 2>/dev/null
+  git -c user.name="${GIT_AUTHOR_NAME:-gabriel-nightly}" -c user.email="${GIT_AUTHOR_EMAIL:-gabriel@noizy.ai}" \
+    commit -q -m "chore(empire): run $(date -u +%Y-%m-%dT%H:%MZ) on $(hostname -s)" && git push -q && echo "pushed $(wc -l <<<"$changed" | tr -d ' ') file(s)"
+}
+stage_mirror()  { [[ -n "${FORGEJO_URL:-}" && -n "${FORGEJO_TOKEN:-}" ]] || { skip mirror "FORGEJO_URL/TOKEN not set"; return 0; }
+                  curl -sf --max-time 5 "$FORGEJO_URL/api/v1/version" >/dev/null || { skip mirror "Forgejo unreachable at $FORGEJO_URL"; return 0; }
+                  "$here/scripts/mirror-to-forgejo.sh" ${MIRROR_ARGS:-} 2>&1 | tail -2; }
+stage_digest()  { [[ -n "$key" ]] || { skip digest "no webhook key"; return 0; }
+                  curl -sf --max-time 5 "${url%/webhook/empire}/healthz" >/dev/null 2>&1 || { skip digest "n8n unreachable at $url"; return 0; }
+                  call '{"action":"gather","source":"empire-run"}' | jq -r 'if .ok then "digest filed (\(.repoCount) repos)" else "error: \(.error)" end'; }
+
+run_stage() {
+  local s="$1" i t0 t1 rc out
+  i=$(idx "$s")
+  printf '▶ %-8s %s\n' "$s" "${WHY[$i]}"
+  if [[ $dry -eq 1 ]]; then R[$i]="dry"; return 0; fi
+  t0=$(date +%s)
+  out=$("stage_$s" 2>&1); rc=$?
+  t1=$(date +%s); T[$i]=$((t1-t0))
+  local skipped; skipped=$(grep '^SKIP:' <<<"$out" | head -1 | cut -c6-)
+  grep -v '^SKIP:' <<<"$out" | sed '/^$/d;s/^/    /'
+  if [[ -n "$skipped" ]]; then R[$i]="skip: $skipped"
+  elif [[ $rc -eq 0 ]]; then R[$i]="ok"; else R[$i]="fail: rc=$rc"; fi
+  printf '  %-8s %s (%ss)\n' "$s" "${R[$i]}" "${T[$i]}"
+  [[ "${R[$i]}" == fail* ]] && return 1 || return 0
+}
+
+write_state() {
+  mkdir -p "$state_dir"
+  local json="{}"
+  local i
+  for i in "${!STAGES[@]}"; do
+    json=$(jq -c --arg s "${STAGES[$i]}" --arg r "${R[$i]:-not run}" --argjson t "${T[$i]:-0}" '. + {($s): {result:$r, seconds:$t}}' <<<"$json")
+  done
+  jq -n --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg host "$(hostname -s)" --argjson stages "$json" --arg ok "$1" \
+    '{ranAt:$at, host:$host, ok:($ok=="1"), stages:$stages}' > "$state"
+}
+
+speak() {  # voice-first: the operator may not be looking at a screen
+  [[ $quiet -eq 1 || "${EMPIRE_VOICE:-1}" == "0" ]] && return 0
+  if is_mac; then
+    command -v say >/dev/null && say -v "${EMPIRE_VOICE_NAME:-Daniel}" "$1" 2>/dev/null &
+    osascript -e "display notification \"$1\" with title \"NOIZY Empire\"" 2>/dev/null || true
+  fi
+}
+
+cmd_run() {
+  while [[ $# -gt 0 ]]; do case "$1" in
+    --dry-run) dry=1 ;; --quiet|-q) quiet=1 ;;
+    --from) from="$2"; shift ;; --only) only="$2"; shift ;;
+    *) echo "unknown arg: $1" >&2; exit 2 ;; esac; shift; done
+  local plan=() started=0 ok=1 failed="" s
+  for s in "${STAGES[@]}"; do
+    if [[ -n "$only" ]]; then [[ ",$only," == *",$s,"* ]] && plan+=("$s"); continue; fi
+    [[ -n "$from" && $started -eq 0 && "$s" != "$from" ]] && continue
+    started=1; plan+=("$s")
+  done
+  [[ ${#plan[@]} -gt 0 ]] || { echo "no stages selected (see: empire stages)" >&2; exit 2; }
+  echo "NOIZY Empire · GORUNFREE · $(hostname -s) · $(date '+%Y-%m-%d %H:%M') · stages: ${plan[*]}"
+  for s in "${plan[@]}"; do
+    run_stage "$s" || { ok=0; failed="$s"; break; }
+  done
+  [[ $dry -eq 1 ]] && { echo "(dry run — nothing touched)"; exit 0; }
+  write_state "$ok"
+  local summary
+  if [[ $ok -eq 1 ]]; then
+    summary="Empire run complete on $(hostname -s)."
+    [[ -f "$here/empire/local-inventory.json" ]] && summary+=" $(jq -r '"\(.totals.repos) local repos, \(.totals.docFiles) docs."' "$here/empire/local-inventory.json" 2>/dev/null)"
+  else
+    summary="Empire run stopped at $failed. Resume with: empire run --from $failed"
+  fi
+  echo; echo "$summary"; speak "$summary"
+  [[ $ok -eq 1 ]]
+}
+
+# ── doctor ───────────────────────────────────────────────────────────────────
+chk() { local label="$1" ok="$2" hint="${3:-}"; if [[ "$ok" == 1 ]]; then printf '  ✅ %s\n' "$label"; else printf '  ❌ %s%s\n' "$label" "${hint:+  → $hint}"; fi; }
+cmd_doctor() {
+  echo "tools"
+  for t in git jq curl node gh rclone ffmpeg; do
+    hint=""; case $t in node) hint="brew install node";; rclone) hint="brew install rclone (optional: Google stage)";; gh) hint="brew install gh (optional)";; ffmpeg) hint="brew install ffmpeg (optional: demo videos)";; esac
+    command -v $t >/dev/null && chk "$t" 1 || chk "$t" 0 "$hint"
+  done
+  echo "credentials"
+  chk "ANTHROPIC_API_KEY" "$([[ -n "${ANTHROPIC_API_KEY:-}" ]] && echo 1 || echo 0)" "empire/stack/.env"
+  chk "INTENT_SHARED_SECRET (webhook key)" "$([[ -n "$key" ]] && echo 1 || echo 0)" "openssl rand -hex 24 → .env"
+  chk "FORGEJO_URL/TOKEN/OWNER" "$([[ -n "${FORGEJO_URL:-}" && -n "${FORGEJO_TOKEN:-}" && -n "${FORGEJO_OWNER:-}" ]] && echo 1 || echo 0)" "Forgejo → Settings → Applications"
+  chk "GITHUB_TOKEN" "$([[ -n "${GITHUB_TOKEN:-}" ]] && echo 1 || echo 0)" "needed for private mirrors"
+  chk "CLOUDFLARE_API_TOKEN + ACCOUNT_ID" "$([[ -n "${CLOUDFLARE_API_TOKEN:-}" && -n "${CLOUDFLARE_ACCOUNT_ID:-}" ]] && echo 1 || echo 0)" "empire signup cloudflare"
+  chk "INFOMANIAK_TOKEN" "$([[ -n "${INFOMANIAK_TOKEN:-}" ]] && echo 1 || echo 0)" "empire signup infomaniak"
+  chk "PROTON Bridge creds" "$([[ -n "${PROTON_BRIDGE_USER:-}" && -n "${PROTON_BRIDGE_PASSWORD:-}" ]] && echo 1 || echo 0)" "empire signup proton"
+  chk "TODAQ (Qatom) client" "$([[ -n "${TODAQ_CLIENT_ID:-}" && -n "${TODAQ_CLIENT_SECRET:-}" ]] && echo 1 || echo 0)" "empire signup todaq --auto"
+  command -v gh >/dev/null && { gh auth status >/dev/null 2>&1 && chk "gh auth" 1 || chk "gh auth" 0 "gh auth login"; }
+  echo "endpoints"
+  [[ -n "${FORGEJO_URL:-}" ]] && { curl -sf --max-time 4 "$FORGEJO_URL/api/v1/version" >/dev/null && chk "Forgejo $FORGEJO_URL" 1 || chk "Forgejo $FORGEJO_URL" 0 "docker compose -f empire/stack/docker-compose.yml up -d"; }
+  curl -sf --max-time 4 "${url%/webhook/empire}/healthz" >/dev/null 2>&1 && chk "n8n ${url%/webhook/empire}" 1 || chk "n8n ${url%/webhook/empire}" 0 "docker compose up -d; import empire/stack/n8n/*.json"
+  curl -sf --max-time 4 http://127.0.0.1:9777/healthz >/dev/null 2>&1 && chk "GABRIEL daemon :9777" 1 || chk "GABRIEL daemon :9777" 0 "cd _mc96-common/gabriel && npm start"
+  curl -sf --max-time 4 http://127.0.0.1:9799/healthz >/dev/null 2>&1 && chk "voice-service :9799" 1 || chk "voice-service :9799" 0 "demo/gabriel-brain (see demo/README.md)"
+  echo "data"
+  chk "manifest valid" "$(node "$here/scripts/build-empire.mjs" --check >/dev/null 2>&1 && echo 1 || echo 0)" "node scripts/build-empire.mjs"
+  chk "local inventory" "$([[ -f "$here/empire/local-inventory.json" ]] && echo 1 || echo 0)" "empire run --only local"
+  chk "google inventory" "$([[ -f "$here/empire/google-inventory.json" ]] && echo 1 || echo 0)" "empire run --only google (rclone) or n8n Google workflow"
+  chk "cloudflare inventory" "$([[ -f "$here/empire/cloudflare-inventory.json" ]] && echo 1 || echo 0)" "empire run --only cloudflare"
+  chk "~/.claude present (claude stage)" "$([[ -d "$HOME/.claude" ]] && echo 1 || echo 0)" "only on GOD"
+  echo "last run"
+  if [[ -f "$state" ]]; then jq -r '"  \(.ranAt) on \(.host) · \(if .ok then "ok" else "FAILED" end)\n" + (.stages | to_entries | map("  \(.key): \(.value.result) (\(.value.seconds)s)") | join("\n"))' "$state"; else echo "  never (empire run)"; fi
+}
+
+cmd_status() {
+  jq -r '"\(.repos|map(select(.tier!="planned"))|length) repos in manifest · hub \(.hub) · story \(.archiveStart) → \(.storyStart) → now"' "$manifest"
+  [[ -n "$key" ]] && echo "webhook: $url (key set)" || echo "webhook: $url (NO KEY)"
+  [[ -f "$here/empire/local-inventory.json" ]] && jq -r '"local: \(.host) scanned \(.scannedAt[:10]) · \(.totals.repos) repos · \(.totals.looseProjects) loose · \(.totals.docFiles) docs"' "$here/empire/local-inventory.json" || echo "local: no inventory yet"
+  [[ -f "$here/empire/google-inventory.json" ]] && jq -r '"google: \(.totals.files // .files|length) files"' "$here/empire/google-inventory.json" 2>/dev/null || echo "google: no inventory yet"
+  [[ -f "$here/empire/cloudflare-inventory.json" ]] && jq -r '"cloudflare: \(.totals.zones) zones · \(.totals.workers) workers · \(.totals.d1) D1 · \(.totals.r2) R2 · \(.totals.wranglerFiles) wrangler.toml"' "$here/empire/cloudflare-inventory.json" || echo "cloudflare: no inventory yet"
+  [[ -f "$state" ]] && jq -r '"last run: \(.ranAt) on \(.host) · \(if .ok then "ok" else "FAILED" end)"' "$state" || echo "last run: never"
+}
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  run)        cmd_run "$@" ;;
+  doctor)     cmd_doctor ;;
+  signup)     exec "$here/scripts/empire-signup" "$@" ;;
+  foss)       exec "$here/scripts/foss" "$@" ;;
+  stages)     for i in "${!STAGES[@]}"; do printf '%-8s %s\n' "${STAGES[$i]}" "${WHY[$i]}"; done ;;
+  status)     cmd_status ;;
+  gather)     call '{"action":"gather","source":"cli"}' | digest ;;
+  gather-all) call '{"action":"gather-all","source":"cli"}' | digest ;;
+  ask)        [[ $# -ge 1 ]] || { echo "usage: empire ask \"question\"" >&2; exit 2; }
+              call "$(jq -nc --arg q "$*" '{action:"digest",question:$q,source:"cli"}')" | digest ;;
+  brief)      [[ $# -eq 1 ]] || { echo "usage: empire brief owner/name" >&2; exit 2; }
+              r=$(jq -r --arg id "$1" '.repos[] | select("\(.owner)/\(.name)"==$id) | "\(.owner)/\(.name) (\(.brand // .tier)): \(.role)"' "$manifest")
+              [[ -n "$r" ]] || { echo "unknown repo $1" >&2; exit 2; }
+              call "$(jq -nc --arg q "Focus only on $r. What is it, how does it connect to the rest, and what are the next 3 moves?" --arg repo "$1" '{action:"digest",question:$q,repo:$repo,source:"cli"}')" | digest ;;
+  open)       [[ $# -eq 1 ]] || { echo "usage: empire open NAME" >&2; exit 2; }
+              u=$(jq -r --arg q "$(tr 'A-Z' 'a-z' <<<"$1")" '.repos[] | select((.name|ascii_downcase|test($q)) or ((.brand//"")|ascii_downcase|test($q))) | "https://github.com/\(.owner)/\(.name)"' "$manifest" | head -1)
+              [[ -n "$u" ]] || { echo "no repo matches $1" >&2; exit 2; }
+              echo "$u"; command -v open >/dev/null && open "$u" || command -v xdg-open >/dev/null && xdg-open "$u" || true ;;
+  *)          sed -n '2,14p' "$0" ;;
+esac

@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# `empire signup` — complete, guided, voice-first sign-up for every external provider the empire runs on.
+# Reads empire/accounts/providers.json. For each provider: explains why, opens the sign-up/token pages, speaks the
+# steps (macOS), collects credentials (silent input), writes them to empire/stack/.env (+ macOS Keychain), verifies live.
+#
+#   empire signup                      status table: which providers are configured + verified
+#   empire signup cloudflare           guided flow for one provider   (cloudflare | proton | infomaniak | todaq)
+#   empire signup --all                all providers, in order
+#   empire signup todaq --auto         TODAQ: create the account via API (no browser) — staging by default
+#   empire signup verify [provider]    re-verify stored credentials only
+#   empire signup show todaq           print the steps/urls/env for a provider without doing anything
+# Env: EMPIRE_VOICE=0 to mute, EMPIRE_NO_OPEN=1 to not open browsers, EMPIRE_KEYCHAIN=0 to skip Keychain.
+set -uo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+reg="$here/empire/accounts/providers.json"
+envfile="$here/empire/stack/.env"
+command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
+[[ -f "$reg" ]] || { echo "missing $reg" >&2; exit 1; }
+is_mac() { [[ "$(uname -s)" == "Darwin" ]]; }
+say_() { [[ "${EMPIRE_VOICE:-1}" == "0" ]] && return 0; is_mac && command -v say >/dev/null && say -v "${EMPIRE_VOICE_NAME:-Daniel}" "$1" 2>/dev/null & true; }
+open_() { [[ "${EMPIRE_NO_OPEN:-0}" == "1" ]] && return 0; if is_mac; then open "$1" 2>/dev/null; elif command -v xdg-open >/dev/null; then xdg-open "$1" 2>/dev/null; fi; true; }
+load_env() { [[ -f "$envfile" ]] && set -a && . "$envfile" && set +a; true; }
+val() { printenv "$1" 2>/dev/null || true; }   # value of an exported var by name
+P() { jq -r --arg id "$1" ".providers[] | select(.id==\$id) | $2" "$reg"; }
+ids() { jq -r '.providers[].id' "$reg"; }
+
+# write KEY=value into .env (replace or append), chmod 600, and mirror to Keychain for secrets
+set_env() {
+  local k="$1" v="$2" secret="${3:-false}"
+  mkdir -p "$(dirname "$envfile")"; touch "$envfile"; chmod 600 "$envfile"
+  if grep -q "^${k}=" "$envfile"; then
+    awk -v k="$k" -v v="$v" 'BEGIN{FS=OFS="="} $1==k {print k"="v; next} {print}' "$envfile" > "$envfile.tmp" && mv "$envfile.tmp" "$envfile"
+  else
+    printf '%s=%s\n' "$k" "$v" >> "$envfile"
+  fi
+  export "$k=$v"
+  if [[ "$secret" == "true" && "${EMPIRE_KEYCHAIN:-1}" == "1" ]] && is_mac; then
+    security add-generic-password -U -a "$USER" -s "ai.noizy.empire.$k" -w "$v" 2>/dev/null || true
+  fi
+}
+
+# ── verification ─────────────────────────────────────────────────────────────
+expand() { local s="$1"; while [[ "$s" =~ \$\{([A-Z0-9_]+)\} ]]; do local k="${BASH_REMATCH[1]}"; s="${s//\$\{$k\}/$(val "$k")}"; done; printf '%s' "$s"; }
+verify_provider() {   # prints "ok|fail|unset <detail>"
+  local id="$1" method url auth ok tok keys missing=""
+  load_env
+  keys=$(P "$id" '.env[] | select(.default == null) | .key')
+  for k in $keys; do [[ -n "$(val "$k")" ]] || missing+="$k "; done
+  [[ -z "$missing" ]] || { echo "unset ${missing% }"; return 1; }
+  method=$(P "$id" '.verify.method'); url=$(expand "$(P "$id" '.verify.url')"); auth=$(P "$id" '.verify.auth // ""'); ok=$(P "$id" '.verify.ok')
+  case "$method" in
+    GET)
+      tok=""; [[ "$auth" == bearer:* ]] && tok="$(val "${auth#bearer:}")"
+      local body; body=$(curl -sS --max-time 10 -H "Authorization: Bearer $tok" -H "Accept: application/json" "$url" 2>&1) || { echo "fail curl: ${body:0:120}"; return 1; }
+      if jq -e "$ok" >/dev/null 2>&1 <<<"$body"; then echo "ok $(jq -c '(.result.status // .data.display_name // .result // .success) // empty' <<<"$body" 2>/dev/null | head -c 80)"; return 0
+      else echo "fail $(head -c 160 <<<"$body")"; return 1; fi ;;
+    tcp)
+      local host="${url%%:*}" port="${url##*:}"
+      if (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null; then exec 3>&- 2>/dev/null; echo "ok $url open"; return 0; else echo "fail $url closed (is Proton Mail Bridge running?)"; return 1; fi ;;
+    node)
+      command -v node >/dev/null || { echo "fail node missing"; return 1; }
+      local out; out=$(cd "$here" && node ${url%% *} ${url#* } 2>&1) && { echo "ok $(jq -r '.twin.id // .twin[0].id // "twin"' <<<"$out" 2>/dev/null)"; return 0; } || { echo "fail ${out:0:160}"; return 1; } ;;
+    *) echo "fail unknown verify method $method"; return 1 ;;
+  esac
+}
+
+# ── guided flow ──────────────────────────────────────────────────────────────
+show_provider() {
+  local id="$1"
+  printf '\n━━ %s ━━\n' "$(P "$id" '.name')"
+  P "$id" '.why'; echo
+  printf 'plan:   %s\n' "$(P "$id" '.plan')"
+  printf 'urls:\n'; P "$id" '.urls | to_entries[] | "  \(.key): \(.value)"'
+  printf 'steps:\n'; P "$id" '.steps | to_entries[] | "  \(.key+1). \(.value)"'
+  printf 'env:\n'; P "$id" '.env[] | "  \(.key)\(if .secret then " (secret)" else "" end) — \(.hint)"'
+  printf 'cli:    %s\n' "$(P "$id" '.cli | "\(.install)  ·  \(.login)  ·  \(.check)"')"
+  printf 'n8n:    %s\n' "$(P "$id" '.n8n')"
+  [[ "$(P "$id" '.notes // ""')" != "" ]] && printf 'notes:  %s\n' "$(P "$id" '.notes')"
+}
+
+prompt_env() {   # ask for each env key not yet set (or confirm overwrite)
+  local id="$1" k hint secret dflt cur v
+  load_env
+  while IFS=$'\t' read -r k secret dflt hint; do
+    cur="$(val "$k")"
+    if [[ -n "$cur" ]]; then
+      read -r -p "  $k already set (${secret:+…}${cur:0:4}…). Replace? [y/N] " v </dev/tty; [[ "$v" =~ ^[Yy] ]] || continue
+    fi
+    echo "  $k — $hint"
+    if [[ "$secret" == "true" ]]; then read -r -s -p "  paste $k: " v </dev/tty; echo
+    else read -r -p "  $k${dflt:+ [$dflt]}: " v </dev/tty; v="${v:-$dflt}"; fi
+    [[ -n "$v" ]] && set_env "$k" "$v" "$secret"
+  done < <(jq -r --arg id "$id" '.providers[] | select(.id==$id) | .env[] | [.key, (.secret|tostring), (.default // ""), .hint] | @tsv' "$reg")
+}
+
+todaq_auto() {
+  local envname="${TODAQ_ENV:-staging}" out
+  echo "  creating Qatom $envname account via POST /v4/account …"
+  out=$(cd "$here" && node empire/accounts/todaq/qatom.mjs signup --env "$envname" --descriptor "${TODAQ_TEST_ITEM:-NOIZY test line — one voice line}" --cost "${TODAQ_TEST_COST:-0.25}") || { echo "  ✗ sign-up failed"; return 1; }
+  while IFS='=' read -r k v; do
+    [[ -n "$k" && -n "$v" ]] || continue
+    case "$k" in TODAQ_CLIENT_SECRET|TODAQ_TWIN_KEY) set_env "$k" "$v" true ;; *) set_env "$k" "$v" false ;; esac
+  done <<<"$out"
+  echo "  ✓ stored $(wc -l <<<"$out" | tr -d ' ') TODAQ_* values in $envfile"
+  say_ "Qatom $envname account created. Secrets stored."
+}
+
+guide() {
+  local id="$1" auto="${2:-0}" name
+  name=$(P "$id" '.name'); [[ -n "$name" ]] || { echo "unknown provider $id (try: $(ids | tr '\n' ' '))" >&2; return 2; }
+  show_provider "$id"
+  say_ "Signing up with $name. $(P "$id" '.steps[0]')"
+  if [[ "$id" == "todaq" && "$auto" == "1" ]]; then todaq_auto || return 1
+  else
+    echo; echo "opening sign-up and token pages…"
+    open_ "$(P "$id" '.urls.signup' | cut -d' ' -f1)"; sleep 1; open_ "$(P "$id" '.urls.token // .urls.console')"
+    [[ "$id" == "todaq" ]] && { read -r -p "  TODAQ can self-register via API. Do that now? [Y/n] " v </dev/tty; [[ "$v" =~ ^[Nn] ]] || { todaq_auto || return 1; }; }
+    [[ "$id" == "todaq" && -n "${TODAQ_CLIENT_ID:-}" ]] || { echo; echo "when you have the credentials:"; prompt_env "$id"; }
+  fi
+  echo; printf '  verifying %s … ' "$name"
+  local r; r=$(verify_provider "$id"); local rc=$?
+  if [[ $rc -eq 0 ]]; then echo "✅ $r"; say_ "$name verified."; else echo "❌ $r"; say_ "$name not verified yet."; fi
+  echo "  next: $(P "$id" '.cli.login')"
+  return $rc
+}
+
+status_table() {
+  load_env
+  printf '%-12s %-9s %s\n' provider state detail
+  local id r
+  for id in $(ids); do
+    r=$(verify_provider "$id" 2>/dev/null); case "$r" in ok*) s="✅ ok";; unset*) s="· unset";; *) s="❌ fail";; esac
+    printf '%-12s %-9s %s\n' "$id" "$s" "${r#* }"
+  done
+  echo; echo "run: empire signup <provider>   ·   empire signup --all   ·   empire signup show <provider>"
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  "")        status_table ;;
+  --all)     rc=0; for id in $(ids); do guide "$id" "$([[ "${1:-}" == "--auto" ]] && echo 1 || echo 0)" || rc=1; done; exit $rc ;;
+  verify)    load_env; if [[ -n "${1:-}" ]]; then r=$(verify_provider "$1"); rc=$?; echo "$1: $r"; exit $rc; else status_table; fi ;;
+  show)      [[ -n "${1:-}" ]] || { echo "usage: empire signup show <provider>" >&2; exit 2; }; show_provider "$1" ;;
+  -h|--help|help) sed -n '2,13p' "$0" ;;
+  *)         auto=0; [[ "${1:-}" == "--auto" ]] && auto=1; guide "$cmd" "$auto" ;;
+esac

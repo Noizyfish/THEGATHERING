@@ -1,0 +1,475 @@
+{
+  "name": "NOIZY Empire — Thru-Line",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Toronto"
+  },
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Daily 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook",
+      "name": "Intent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ],
+      "webhookId": "noizy-empire-intent",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "empire",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "auth",
+      "name": "Key Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.headers['x-noizy-key'] }}",
+              "rightValue": "={{ $env.INTENT_SHARED_SECRET }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "reject",
+      "name": "401",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        360
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: false, error: 'unauthorized' } }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch Manifest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        120
+      ],
+      "parameters": {
+        "url": "={{ $env.EMPIRE_MANIFEST_URL }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "split",
+      "name": "Split Repos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        120
+      ],
+      "parameters": {
+        "jsCode": "const manifest = $input.first().json;\nconst intent = $('Intent Webhook').isExecuted ? ($('Intent Webhook').first().json.body || {}) : {};\nconst wantAll = intent.action === 'gather-all';\nconst tiers = wantAll ? ['core','tooling','personal','upstream'] : ['core','tooling'];\nreturn manifest.repos\n  .filter(r => tiers.includes(r.tier))\n  .map(r => ({ json: { ...r, localName: `${r.owner}--${r.name}`, intent } }));"
+      }
+    },
+    {
+      "id": "mirror",
+      "name": "Ensure Forgejo Mirror",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        120
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FORGEJO_URL }}/api/v1/repos/migrate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=token {{ $env.FORGEJO_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  clone_addr: `https://github.com/${$json.owner}/${$json.name}.git`,\n  repo_name: $json.localName,\n  repo_owner: $env.FORGEJO_OWNER,\n  description: $json.role,\n  mirror: true,\n  mirror_interval: '8h0m0s',\n  private: $json.visibility === 'private',\n  service: 'github',\n  wiki: true, issues: true, releases: true,\n  ...($env.GITHUB_TOKEN ? { auth_token: $env.GITHUB_TOKEN } : {})\n}) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "aggregate",
+      "name": "Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        120
+      ],
+      "parameters": {
+        "jsCode": "const manifest = $('Fetch Manifest').first().json;\nconst repos = $('Split Repos').all().map(i => i.json);\nconst results = $input.all().map(i => i.json);\nconst mirrored = results.filter(r => r && r.id).length;\nconst intent = repos[0]?.intent || {};\nlet inv = null;\ntry { const j = $('Fetch Local Inventory').first().json; if (j && j.repos) inv = j; } catch {}\nlet goog = null;\ntry { const j = $('Fetch Google Inventory').first().json; if (j && j.items) goog = j; } catch {}\nlet googleTable = '(no Google inventory yet)';\nif (goog) {\n  const t = goog.totals;\n  const code = goog.items.filter(i => i.kind === 'code' || i.kind === 'video').slice(0, 300).map(i => `- ${(i.born||'').slice(0,10)} | ${i.source} ${i.name} | ${i.kind}`).join('\\n');\n  const years = (goog.byYear||[]).map(y => `${y.year}:${y.files}`).join(' ');\n  googleTable = `Totals: ${t.drive} Drive files (${t.docs} docs, ${t.code} code, ${t.audio} audio), ${t.youtube} YouTube uploads${goog.gmail ? `, ${goog.gmail.messagesTotal} Gmail messages` : ''}. Files born per year: ${years}\\n${code}`;\n}\nconst byDate = [...repos].sort((a,b) => (a.createdAt||'').localeCompare(b.createdAt||''));\nconst ghTable = byDate.map(r => `- ${r.createdAt} → ${r.pushedAt} | GitHub ${r.owner}/${r.name} | ${r.tier} | ${r.brand || '-'} | ${r.role}`).join('\\n');\nlet localTable = '(no local inventory yet — run scripts/gather-local.sh on the M2 Ultra)';\nif (inv) {\n  const src = p => p.startsWith('/Volumes/') ? 'HDD:' + p.split('/')[2] : inv.host.toUpperCase();\n  const lr = (inv.repos||[]).filter(r => !/github\\.com[/:](RSPNOIZY|Noizyfish)\\//i.test(r.remote||''))\n    .map(r => ({ d: (r.firstCommit||r.oldestFileBorn||r.born||'').slice(0,10), t: `${src(r.path)} ${r.path} | git ${r.commits} commits${r.remote?'':' NO REMOTE'}${r.dirty?' dirty':''}` }));\n  const lp = (inv.looseProjects||[]).map(p => ({ d: (p.oldestFileBorn||p.born||p.modified||'').slice(0,10), t: `${src(p.path)} ${p.path} | loose ${p.marker}` }));\n  const docs = (inv.docs||[]).map(d => `- docs ${d.root}: ${d.count} files, born ${(d.oldestFileBorn||'?').slice(0,10)} → ${(d.newestFileBorn||'?').slice(0,10)}`).join('\\n');\n  localTable = [...lr, ...lp].sort((a,b) => a.d.localeCompare(b.d)).map(x => `- ${x.d} | ${x.t}`).join('\\n') + '\\n' + docs;\n}\nconst question = intent.question ? `\\n\\nThe founder asks: ${intent.question}` : '';\nconst prompt = `You are GABRIEL, orchestrator for the MC96ECO Universe / NOIZY Empire (canon: noizy.ai, covenant 75/25, killSwitchHolder RSP_001).\n\nThe founder has ~30 years of work (${manifest.archiveStart || '1996'} → today) on GitHub, Google (Drive, YouTube, Gmail), an M2 Ultra and external drives, with an intense vibe-coding era since ${manifest.storyStart || 'late 2025'}. Everything below is dated by repo creation, first commit, or file BIRTH date. Colour in the whole story in strict chronological order: year-by-year for the archive, month-by-month for the vibe-coding era. Explain what was being built, how the pieces connect, what is duplicated, abandoned, or only on a drive with no remote, and the 5 most valuable next moves to converge it all. Be direct and concrete. Always write the brand as NOIZY (never with an S). Markdown sections: ## The Story (chronological), ## How It Connects, ## Duplicates, Dead Ends & Unbacked Work, ## Next 5 Moves.${question}\n\nGitHub (created → last push | repo | tier | brand | role):\n${ghTable}\n\nLocal — M2 Ultra + drives (birth date | source path | kind):\n${localTable}\n\nGoogle — Drive + YouTube + Gmail (birth date | item | kind):\n${googleTable}`;\nreturn [{ json: { prompt, repoCount: repos.length, mirrored, intent, localRepos: inv ? inv.totals.repos : 0 } }];"
+      }
+    },
+    {
+      "id": "claude",
+      "name": "Claude Thru-Line",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "={{ $env.ANTHROPIC_API_KEY }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  model: $env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',\n  max_tokens: 4096,\n  messages: [{ role: 'user', content: $json.prompt }]\n}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "shape",
+      "name": "Shape Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        120
+      ],
+      "parameters": {
+        "jsCode": "const res = $input.first().json;\nconst meta = $('Build Prompt').first().json;\nconst text = (res.content || []).filter(c => c.type === 'text').map(c => c.text).join('\\n');\nconst date = new Date().toISOString().slice(0,10);\nreturn [{ json: {\n  ok: true,\n  date,\n  title: `Thru-Line digest ${date}`,\n  body: `${text}\\n\\n---\\n_${meta.repoCount} GitHub repos + ${meta.localRepos} local repos scanned · ${meta.mirrored} mirrors created this run · model ${res.model}_`,\n  digest: text,\n  repoCount: meta.repoCount,\n  mirrored: meta.mirrored,\n  fromIntent: $('Intent Webhook').isExecuted\n} }];"
+      }
+    },
+    {
+      "id": "publish",
+      "name": "File Digest in Forgejo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FORGEJO_URL }}/api/v1/repos/{{ $env.FORGEJO_OWNER }}/Noizyfish--THEGATHERING/issues",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=token {{ $env.FORGEJO_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ title: $json.title, body: $json.body }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "isIntent",
+      "name": "From Intent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c2",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.fromIntent }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Respond to Intent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        240
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true, date: $json.date, repoCount: $json.repoCount, mirrored: $json.mirrored, digest: $json.digest } }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "fetchLocal",
+      "name": "Fetch Local Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        320
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "={{ $env.EMPIRE_LOCAL_INVENTORY_URL }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "fetchGoogle",
+      "name": "Fetch Google Inventory",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        480
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "={{ $env.EMPIRE_GOOGLE_INVENTORY_URL }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Daily 06:00": {
+      "main": [
+        [
+          {
+            "node": "Fetch Manifest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Intent Webhook": {
+      "main": [
+        [
+          {
+            "node": "Key Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Key Valid?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Manifest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "401",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Manifest": {
+      "main": [
+        [
+          {
+            "node": "Split Repos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Local Inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Google Inventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Repos": {
+      "main": [
+        [
+          {
+            "node": "Ensure Forgejo Mirror",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure Forgejo Mirror": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude Thru-Line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude Thru-Line": {
+      "main": [
+        [
+          {
+            "node": "Shape Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shape Digest": {
+      "main": [
+        [
+          {
+            "node": "File Digest in Forgejo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "From Intent?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "From Intent?": {
+      "main": [
+        [
+          {
+            "node": "Respond to Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  }
+}

@@ -19,6 +19,7 @@
 		C10000010000000000000010 /* HeavenAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000010000000000000010; };
 		C10000010000000000000011 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000010000000000000011; };
 		C10000010000000000000012 /* GabrielEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000010000000000000012; };
+		C10000010000000000000014 /* EmpireIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000010000000000000014; };
 		C10000010000000000000013 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C20000010000000000000013; };
 /* End PBXBuildFile section */
 
@@ -35,6 +36,7 @@
 		C20000010000000000000010 /* HeavenAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeavenAPI.swift; sourceTree = "<group>"; };
 		C20000010000000000000011 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		C20000010000000000000012 /* GabrielEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GabrielEngine.swift; sourceTree = "<group>"; };
+		C20000010000000000000014 /* EmpireIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmpireIntents.swift; sourceTree = "<group>"; };
 		C20000010000000000000013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C30000010000000000000001 /* Gabriel.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Gabriel.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -56,6 +58,7 @@
 				C40000010000000000000003 /* Views */,
 				C40000010000000000000004 /* Services */,
 				C40000010000000000000005 /* Models */,
+				C40000010000000000000007 /* Intents */,
 				C20000010000000000000013 /* Assets.xcassets */,
 			);
 			path = Gabriel;
@@ -98,6 +101,14 @@
 				C30000010000000000000001 /* Gabriel.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C40000010000000000000007 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				C20000010000000000000014 /* EmpireIntents.swift */,
+			);
+			path = Intents;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -180,6 +191,7 @@
 				C10000010000000000000010 /* HeavenAPI.swift in Sources */,
 				C10000010000000000000011 /* Models.swift in Sources */,
 				C10000010000000000000012 /* GabrielEngine.swift in Sources */,
+				C10000010000000000000014 /* EmpireIntents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

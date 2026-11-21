@@ -1,0 +1,6 @@
+# optional tier — uv pip install -r empire/foss/requirements.optional.txt
+silero-vad  # Silero VAD
+kokoro  # Kokoro TTS
+piper-tts  # Piper TTS
+chatterbox-tts  # Chatterbox TTS
+f5-tts  # F5-TTS

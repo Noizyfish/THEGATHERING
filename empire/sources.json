@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "host": "m2ultra",
+  "comment": "Local roots scanned by scripts/gather-local.sh. Edit to match the Mac + drives. Globs allowed in `roots`.",
+  "roots": [
+    "/Users/m2ultra/NOIZYANTHROPIC",
+    "/Users/m2ultra/NOIZY",
+    "/Users/m2ultra/Developer",
+    "/Users/m2ultra/Projects",
+    "/Users/m2ultra/Documents",
+    "/Users/m2ultra/Desktop",
+    "/Volumes/*"
+  ],
+  "skipVolumes": ["Macintosh HD", "Recovery", "Preboot", "VM", "Update", "com.apple.TimeMachine.localsnapshots"],
+  "skipDirs": ["node_modules", ".Trash", ".Trashes", "Library", "Backups.backupdb", ".Spotlight-V100", ".fseventsd", "DerivedData", "Pods", ".venv", "venv", "target", "dist", "build", ".cache"],
+  "maxDepth": 6,
+  "projectMarkers": ["package.json", "pyproject.toml", "requirements.txt", "Cargo.toml", "Package.swift", "go.mod", "Gemfile", "composer.json", "wrangler.toml", "wrangler.jsonc", "docker-compose.yml"],
+  "docExtensions": ["md", "txt", "pdf", "rtf", "doc", "docx", "pages", "key", "numbers", "csv", "json", "canvas"],
+  "docsDest": "docs"
+}

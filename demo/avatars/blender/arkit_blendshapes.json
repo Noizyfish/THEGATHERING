@@ -1,0 +1,30 @@
+{
+  "_comment": "The 52 ARKit face blendshapes (iPhone TrueDepth) — the lingua franca between LUCY (iPhone), Blender, RealityKit and the lip-sync engine. Order matters for the UDP packet (52 floats).",
+  "arkit52": [
+    "eyeBlinkLeft", "eyeLookDownLeft", "eyeLookInLeft", "eyeLookOutLeft", "eyeLookUpLeft", "eyeSquintLeft", "eyeWideLeft",
+    "eyeBlinkRight", "eyeLookDownRight", "eyeLookInRight", "eyeLookOutRight", "eyeLookUpRight", "eyeSquintRight", "eyeWideRight",
+    "jawForward", "jawLeft", "jawRight", "jawOpen",
+    "mouthClose", "mouthFunnel", "mouthPucker", "mouthLeft", "mouthRight", "mouthSmileLeft", "mouthSmileRight",
+    "mouthFrownLeft", "mouthFrownRight", "mouthDimpleLeft", "mouthDimpleRight", "mouthStretchLeft", "mouthStretchRight",
+    "mouthRollLower", "mouthRollUpper", "mouthShrugLower", "mouthShrugUpper", "mouthPressLeft", "mouthPressRight",
+    "mouthLowerDownLeft", "mouthLowerDownRight", "mouthUpperUpLeft", "mouthUpperUpRight",
+    "browDownLeft", "browDownRight", "browInnerUp", "browOuterUpLeft", "browOuterUpRight",
+    "cheekPuff", "cheekSquintLeft", "cheekSquintRight", "noseSneerLeft", "noseSneerRight", "tongueOut"
+  ],
+  "_visemes": "Rhubarb Lip Sync mouth shapes (A–H, X) → ARKit weights. Used when the avatar speaks TTS audio with no face capture driving it.",
+  "rhubarb_to_arkit": {
+    "A": { "mouthClose": 0.7, "mouthPressLeft": 0.4, "mouthPressRight": 0.4 },
+    "B": { "jawOpen": 0.12, "mouthStretchLeft": 0.2, "mouthStretchRight": 0.2 },
+    "C": { "jawOpen": 0.35, "mouthStretchLeft": 0.15, "mouthStretchRight": 0.15 },
+    "D": { "jawOpen": 0.65, "mouthLowerDownLeft": 0.3, "mouthLowerDownRight": 0.3 },
+    "E": { "jawOpen": 0.3, "mouthFunnel": 0.5, "mouthPucker": 0.2 },
+    "F": { "jawOpen": 0.1, "mouthPucker": 0.85, "mouthFunnel": 0.3 },
+    "G": { "jawOpen": 0.05, "mouthRollLower": 0.6, "mouthUpperUpLeft": 0.25, "mouthUpperUpRight": 0.25 },
+    "H": { "jawOpen": 0.25, "tongueOut": 0.4, "mouthLowerDownLeft": 0.2, "mouthLowerDownRight": 0.2 },
+    "X": { "mouthClose": 0.2 }
+  },
+  "_idle": "Micro-motion layered under everything so the avatar never looks dead: blink every 3–6 s, breathing on jawOpen/cheek, saccades on eyeLook*.",
+  "idle": { "blinkIntervalSec": [3.0, 6.0], "blinkDurationSec": 0.14, "saccadeAmplitude": 0.08, "breathAmplitude": 0.02 },
+  "_wire": "UDP JSON packet, 60 Hz: {\"t\": <unix ms>, \"id\": \"lucy|gabriel\", \"w\": [52 floats 0..1], \"head\": [pitch, yaw, roll] radians}",
+  "udp": { "port": 11111, "host": "GOD.local" }
+}

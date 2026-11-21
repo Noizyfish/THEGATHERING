@@ -1,0 +1,8 @@
+# generated from hitz.json — scripts/foss install handles these (npm i -g)
+@modelcontextprotocol/sdk  # Model Context Protocol SDKs
+@anthropic-ai/sdk  # Anthropic SDKs + claude-agent-sdk
+@anthropic-ai/claude-agent-sdk  # Anthropic SDKs + claude-agent-sdk
+@tauri-apps/cli  # Tauri 2
+vite  # Vite + TypeScript
+typescript  # Vite + TypeScript
+wrangler  # cloudflared + wrangler
