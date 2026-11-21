@@ -96,7 +96,7 @@ function storyEvents() {
     for (const r of inventory.repos ?? []) {
       const date = (r.firstCommit || r.oldestFileBorn || r.born || "").slice(0, 10);
       if (!date) continue;
-      const mirrored = r.remote && /github\.com[/:](RSPNOIZY|Noizyfish)\//i.test(r.remote);
+      const mirrored = r.remote && /github\.com[/:](RSPNOIZY|Noizyfish|NOIZYLAB-io|NOIZY-ai)\//i.test(r.remote);
       if (mirrored) continue; // already told via its GitHub repo
       ev.push({ date, src: srcTag(r.path), label: `\`${r.path}\``, brand: "local git", role: `${r.commits} commits${r.dirty ? ", uncommitted changes" : ""}${r.remote ? "" : ", NO REMOTE"} · ${fmtBytes(r.bytes)}`, until: (r.lastCommit || r.newestFileBorn || "").slice(0, 10) });
     }
@@ -286,9 +286,11 @@ function header() {
     "",
     "# MC96ECO UNIVERSE — THE NOIZY EMPIRE, ONE MAP",
     "",
-    `> ${live} repositories across **RSPNOIZY** (org) and **Noizyfish** (personal), ${planned} planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: ${manifest.hub}.`,
+    `> ${live} repositories across **Noizyfish**, **RSPNOIZY** (both user accounts) and the orgs **NOIZYLAB-io** (origin, 2025-11-20) and **NOIZY-ai**, ${planned} planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: ${manifest.hub}.`,
     "",
     `**killSwitchHolder:** ${manifest.killSwitchHolder} | **covenant:** ${manifest.covenant} | **canon:** ${manifest.canon}`,
+    "",
+    `**SUPERSTACK** (AI research & vibe-coding core, ${(manifest.superstack?.repos ?? []).length} repos): ${(manifest.superstack?.repos ?? []).map((r) => `[${r}](https://github.com/${r})`).join(" · ")} — inventory, timeline and grouping in [SUPERSTACK.md](SUPERSTACK.md). FOSS supply chain: [foss/GREATEST_HITZ.md](foss/GREATEST_HITZ.md).`,
     "",
     "## How to pull everything into one workspace",
     "",

@@ -80,6 +80,25 @@ for r in "$HOME/NOIZYLAB" "$HOME/NOIZYANTHROPIC" "$HOME/NOIZY" "$HOME/Documents/
   done
 done
 
+# 6. SUPERSTACK hunt — nothing named "superstack" exists on GitHub (see empire/SUPERSTACK.md); if it exists it is on this Mac
+#    or the drives. Index (never copy) every path, file name and text hit for the research/vibe-coding stack keywords.
+#    Secrets and transcripts are excluded; only paths, sizes and birth dates are recorded.
+[[ $dry -eq 1 ]] && echo "  would write superstack-hunt.md"
+superstack_terms='superstack|super[ _-]?stack|vibe[ _-]?cod|anthropic[ _-]?fellows|mc96|dreamchamber|gabriel|lucy|noizyvox|noizyanthropic'
+[[ $dry -eq 1 ]] || {
+  echo "# SUPERSTACK hunt — $today on $(hostname -s)"; echo
+  echo "terms: $superstack_terms"; echo
+  for r in "$HOME" /Volumes/*; do
+    [[ -d "$r" ]] || continue
+    find -E "$r" -maxdepth 6 \( -path '*/node_modules' -o -path '*/.git' -o -path '*/Library/Caches' -o -path '*/.Trash' -o -name '.env*' \) -prune -o \
+      -type f -iregex ".*($superstack_terms).*" -print 2>/dev/null | head -2000 | while read -r f; do
+      printf '%s\t%s\t%s\n' "$(stat -f %SB -t %Y-%m-%d "$f" 2>/dev/null)" "$(stat -f %z "$f" 2>/dev/null)" "${f#$HOME/}"
+    done
+  done | sort
+  echo; echo "## text hits (Claude memory + CLAUDE.md + Gemini reports)"
+  grep -rIliE "$superstack_terms" "$HOME/.claude/projects" "$HOME/.gemini" 2>/dev/null | grep -viE 'secret|token|\.env' | sed "s#^$HOME/##" | head -500
+} > "$day/superstack-hunt.md" 2>/dev/null || true
+
 [[ $dry -eq 1 ]] && exit 0
 
 # Day summary + rolling README
