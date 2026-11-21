@@ -1,0 +1,6 @@
+# local secrets + machine output
+empire/stack/.env
+.env
+*.log
+node_modules/
+.DS_Store

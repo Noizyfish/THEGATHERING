@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# `empire` — the same actions Siri runs, from any shell (Terminal, Raycast, Alfred, Keyboard Maestro, SSH, cron).
+#   empire gather            mirror + thru-line digest
+#   empire gather-all        include personal vaults + forks
+#   empire ask "question"    ask Claude about the whole story
+#   empire brief owner/name  one-repo brief
+#   empire status            manifest + webhook health
+#   empire open NAME         open a repo on GitHub (fuzzy on name)
+# Env: EMPIRE_WEBHOOK_URL (…/webhook/empire), EMPIRE_WEBHOOK_KEY (INTENT_SHARED_SECRET). Reads empire/stack/.env if present.
+set -euo pipefail
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[[ -f "$here/empire/stack/.env" ]] && set -a && . "$here/empire/stack/.env" && set +a
+url="${EMPIRE_WEBHOOK_URL:-${N8N_WEBHOOK_URL:-http://localhost:5678/}webhook/empire}"
+key="${EMPIRE_WEBHOOK_KEY:-${INTENT_SHARED_SECRET:-}}"
+manifest="$here/empire/repos.json"
+command -v jq >/dev/null || { echo "jq is required" >&2; exit 1; }
+
+call() {
+  [[ -n "$key" ]] || { echo "set EMPIRE_WEBHOOK_KEY (or INTENT_SHARED_SECRET)" >&2; exit 1; }
+  curl -sS --max-time 240 -X POST "$url" -H "Content-Type: application/json" -H "X-Noizy-Key: $key" -d "$1"
+}
+digest() { jq -r 'if .ok then "\(.date) · \(.repoCount) repos · \(.mirrored) new mirrors\n\n\(.digest)" else "error: \(.error)" end'; }
+
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  gather)     call '{"action":"gather","source":"cli"}' | digest ;;
+  gather-all) call '{"action":"gather-all","source":"cli"}' | digest ;;
+  ask)        [[ $# -ge 1 ]] || { echo "usage: empire ask \"question\"" >&2; exit 2; }
+              call "$(jq -nc --arg q "$*" '{action:"digest",question:$q,source:"cli"}')" | digest ;;
+  brief)      [[ $# -eq 1 ]] || { echo "usage: empire brief owner/name" >&2; exit 2; }
+              r=$(jq -r --arg id "$1" '.repos[] | select("\(.owner)/\(.name)"==$id) | "\(.owner)/\(.name) (\(.brand // .tier)): \(.role)"' "$manifest")
+              [[ -n "$r" ]] || { echo "unknown repo $1" >&2; exit 2; }
+              call "$(jq -nc --arg q "Focus only on $r. What is it, how does it connect to the rest, and what are the next 3 moves?" --arg repo "$1" '{action:"digest",question:$q,repo:$repo,source:"cli"}')" | digest ;;
+  status)     jq -r '"\(.repos|map(select(.tier!="planned"))|length) repos in manifest · hub \(.hub) · story \(.archiveStart) → \(.storyStart) → now"' "$manifest"
+              [[ -n "$key" ]] && echo "webhook: $url (key set)" || echo "webhook: $url (NO KEY)"
+              [[ -f "$here/empire/local-inventory.json" ]] && jq -r '"local: \(.host) scanned \(.scannedAt[:10]) · \(.totals.repos) repos · \(.totals.looseProjects) loose · \(.totals.docFiles) docs"' "$here/empire/local-inventory.json" || echo "local: no inventory yet" ;;
+  open)       [[ $# -eq 1 ]] || { echo "usage: empire open NAME" >&2; exit 2; }
+              u=$(jq -r --arg q "$(tr 'A-Z' 'a-z' <<<"$1")" '.repos[] | select((.name|ascii_downcase|test($q)) or ((.brand//"")|ascii_downcase|test($q))) | "https://github.com/\(.owner)/\(.name)"' "$manifest" | head -1)
+              [[ -n "$u" ]] || { echo "no repo matches $1" >&2; exit 2; }
+              echo "$u"; command -v open >/dev/null && open "$u" || command -v xdg-open >/dev/null && xdg-open "$u" || true ;;
+  *)          sed -n '2,10p' "$0" ;;
+esac

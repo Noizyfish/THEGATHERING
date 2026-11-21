@@ -1,0 +1,563 @@
+{
+  "version": 1,
+  "universe": "MC96ECO",
+  "archiveStart": "1996-01",
+  "archiveLabel": "1996 → late 2025: the archive (30 years of work on the drives)",
+  "storyStart": "2025-11",
+  "storyLabel": "Late 2025 → now: the vibe-coding era",
+  "canon": "noizy.ai",
+  "killSwitchHolder": "RSP_001",
+  "covenant": "75/25",
+  "hub": "Noizyfish/THEGATHERING",
+  "workspaceRoot": "~/NOIZY",
+  "tiers": {
+    "core": "Brand repos that ARE the NOIZY Empire. Cloned by default.",
+    "tooling": "Shared code, agents, consoles and archives that power the brands. Cloned by default.",
+    "personal": "Private vaults, people repos and scratch space. Cloned only with --all.",
+    "upstream": "Third-party forks kept for reference or contribution. Cloned only with --all.",
+    "planned": "Referenced in doctrine but no repository exists yet. Never cloned."
+  },
+  "repos": [
+    {
+      "name": "NOIZYLAB",
+      "owner": "RSPNOIZY",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Canonical upstream of this hub. Research lab + shared tooling core (MC96 common, Gabriel, voice engine, LIFELUV).",
+      "language": "TypeScript",
+      "visibility": "public",
+      "site": "https://noizylab.ca",
+      "createdAt": "2026-04-05",
+      "pushedAt": "2026-05-30"
+    },
+    {
+      "name": "THEGATHERING",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Working fork of RSPNOIZY/NOIZYLAB and home of this Empire manifest.",
+      "language": "TypeScript",
+      "visibility": "public",
+      "forkOf": "RSPNOIZY/NOIZYLAB",
+      "createdAt": "2026-11-06",
+      "pushedAt": "2026-05-30"
+    },
+    {
+      "name": "NOIZYFISH",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "NOIZYFISH",
+      "role": "Producer ecosystem. THE REVOLUTION WILL SOUND LIKE YESTERDAY.",
+      "language": "HTML",
+      "visibility": "public",
+      "site": "https://noizyfish.com",
+      "createdAt": "2026-04-09",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "NOIZYKIDZ",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "NOIZYKIDZ",
+      "role": "Youth division. Haptic music education. Deaf-first. Autism-calm. Every kid plays.",
+      "language": "HTML",
+      "visibility": "public",
+      "site": "https://noizykidz.com",
+      "createdAt": "2026-04-04",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "NOIZYWORLD",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "NOIZYWORLD",
+      "role": "10-Year Sovereign Commerce System.",
+      "visibility": "public",
+      "createdAt": "2026-05-06",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "DREAMCHAMBER",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "DREAMCHAMBER",
+      "role": "Creative residency. 500-Year Codex Creative Sanctuary for human-AI collaboration.",
+      "language": "HTML",
+      "visibility": "public",
+      "createdAt": "2026-04-04",
+      "pushedAt": "2026-10-13"
+    },
+    {
+      "name": "THE-OLD-GUARD",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "THE-OLD-GUARD",
+      "role": "Legacy artist catalog + ResurrectionOS: giving older Apple hardware new life.",
+      "visibility": "public",
+      "createdAt": "2026-05-05",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "FISHMUSICINC",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "FISH MUSIC INC",
+      "role": "Music catalog and licensing. Robert Plowman's original label entity.",
+      "visibility": "public",
+      "createdAt": "2026-05-05",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "2NDACT",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "2NDACT",
+      "role": "Universal Bridge App: AIVA + Replit + GOD.local + Cloudflare.",
+      "visibility": "public",
+      "createdAt": "2026-05-06",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "THE-GATHERED",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "THE-GATHERING",
+      "role": "Community gathering point (org edition).",
+      "visibility": "public",
+      "createdAt": "2026-04-29",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "THE-GATHERING",
+      "owner": "Noizyfish",
+      "tier": "core",
+      "brand": "THE-GATHERING",
+      "role": "Community gathering point (personal edition).",
+      "visibility": "public",
+      "createdAt": "2026-04-10",
+      "pushedAt": "2026-04-10"
+    },
+    {
+      "name": "RSPNOIZY",
+      "owner": "RSPNOIZY",
+      "tier": "core",
+      "brand": "NOIZY.AI",
+      "role": "Organisation profile README.",
+      "visibility": "public",
+      "site": "https://noizy.ai",
+      "createdAt": "2026-04-04",
+      "pushedAt": "2026-05-06"
+    },
+    {
+      "name": "NOIZYLAB",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Shell automation and lab scripts.",
+      "language": "Shell",
+      "visibility": "public",
+      "createdAt": "2025-12-28",
+      "pushedAt": "2026-11-06"
+    },
+    {
+      "name": "NOIZYLAB_CONSOLE_v3",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Lab console, v3.",
+      "language": "Python",
+      "visibility": "private",
+      "createdAt": "2025-12-17",
+      "pushedAt": "2026-09-23"
+    },
+    {
+      "name": "MC96-Mission-Control",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "MC96",
+      "role": "MC96 Zero Latency AI Mission Control.",
+      "language": "Python",
+      "visibility": "public",
+      "createdAt": "2025-12-18",
+      "pushedAt": "2025-12-18"
+    },
+    {
+      "name": "GABRIEL",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "GABRIEL",
+      "role": "Gabriel agent master code location.",
+      "language": "Python",
+      "visibility": "private",
+      "createdAt": "2025-12-10",
+      "pushedAt": "2026-09-20"
+    },
+    {
+      "name": "NOIZYLAB-GABRIEL",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "GABRIEL",
+      "role": "Gabriel master code location (earlier edition).",
+      "visibility": "private",
+      "createdAt": "2025-12-10",
+      "pushedAt": "2026-04-04"
+    },
+    {
+      "name": "noizy-local-agents",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZY.AI",
+      "role": "Local-first NOIZY.AI agents for TagSpaces, Desktop Commander, DEVONthink and Obsidian.",
+      "visibility": "private",
+      "createdAt": "2026-10-29",
+      "pushedAt": "2026-10-29"
+    },
+    {
+      "name": "aeon-magick-ai-computer-control",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZY.AI",
+      "role": "Universal AI computer-control KVM (REST API + MCP) with private networking stack.",
+      "language": "Rust",
+      "visibility": "public",
+      "createdAt": "2026-10-05",
+      "pushedAt": "2026-09-23"
+    },
+    {
+      "name": "CODEMASTER",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Code archive: legacy scripts, backups and archived code.",
+      "visibility": "public",
+      "createdAt": "2025-12-23",
+      "pushedAt": "2025-12-23"
+    },
+    {
+      "name": "swift-library",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZYLAB",
+      "role": "Swift library scaffolding.",
+      "language": "Swift",
+      "visibility": "private",
+      "createdAt": "2026-03-30",
+      "pushedAt": "2026-03-30"
+    },
+    {
+      "name": "CLAUDE-TODAY",
+      "owner": "Noizyfish",
+      "tier": "tooling",
+      "brand": "NOIZY.AI",
+      "role": "Daily Claude / Anthropic workspace.",
+      "visibility": "private",
+      "createdAt": "2026-03-27",
+      "pushedAt": "2026-03-27"
+    },
+    {
+      "name": "NOIZYFISH_THE_AQAURIUM",
+      "owner": "Noizyfish",
+      "tier": "personal",
+      "brand": "THE-AQUARIUM",
+      "role": "Audio vault, 40-year collection. CLIENT#1 RSP001.",
+      "visibility": "private",
+      "createdAt": "2026-02-11",
+      "pushedAt": "2026-02-11"
+    },
+    {
+      "name": "RSPOO1---Robert-Stephen-Plowman",
+      "owner": "Noizyfish",
+      "tier": "personal",
+      "brand": "RSP001",
+      "role": "Founder repo.",
+      "visibility": "private",
+      "createdAt": "2026-09-15",
+      "pushedAt": "2026-09-15"
+    },
+    {
+      "name": "desktop-tutorial",
+      "owner": "Noizyfish",
+      "tier": "personal",
+      "brand": "",
+      "role": "GitHub Desktop tutorial repository.",
+      "visibility": "private",
+      "createdAt": "2026-02-13",
+      "pushedAt": "2026-02-13"
+    },
+    {
+      "name": "homebridge-config-ui-x",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Homebridge UI.",
+      "language": "TypeScript",
+      "visibility": "public",
+      "forkOf": "homebridge/homebridge-config-ui-x",
+      "createdAt": "2026-09-23",
+      "pushedAt": "2026-09-21"
+    },
+    {
+      "name": "sonobus",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: SonoBus real-time network audio.",
+      "language": "C++",
+      "visibility": "public",
+      "forkOf": "sonosaurus/sonobus",
+      "createdAt": "2026-09-30",
+      "pushedAt": "2026-09-04"
+    },
+    {
+      "name": "brave-browser",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Brave browser.",
+      "visibility": "public",
+      "forkOf": "brave/brave-browser",
+      "createdAt": "2026-08-06",
+      "pushedAt": "2026-08-06"
+    },
+    {
+      "name": "agent-skills",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Agent Skills for Firebase.",
+      "language": "JavaScript",
+      "visibility": "public",
+      "forkOf": "firebase/agent-skills",
+      "createdAt": "2026-07-29",
+      "pushedAt": "2026-07-28"
+    },
+    {
+      "name": "awesome-selfhosted",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: awesome-selfhosted list.",
+      "visibility": "public",
+      "forkOf": "awesome-selfhosted/awesome-selfhosted",
+      "createdAt": "2026-04-25",
+      "pushedAt": "2026-04-18"
+    },
+    {
+      "name": "brew",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Homebrew.",
+      "language": "Ruby",
+      "visibility": "public",
+      "forkOf": "Homebrew/brew",
+      "createdAt": "2025-12-26",
+      "pushedAt": "2026-01-11"
+    },
+    {
+      "name": "copilot-cli",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: GitHub Copilot CLI.",
+      "language": "Shell",
+      "visibility": "public",
+      "forkOf": "github/copilot-cli",
+      "createdAt": "2025-12-29",
+      "pushedAt": "2025-12-29"
+    },
+    {
+      "name": "refact",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Refact AI agent.",
+      "language": "Rust",
+      "visibility": "public",
+      "forkOf": "smallcloudai/refact",
+      "createdAt": "2025-12-25",
+      "pushedAt": "2025-12-25"
+    },
+    {
+      "name": "cloudflare-docs",
+      "owner": "Noizyfish",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Cloudflare documentation.",
+      "language": "MDX",
+      "visibility": "public",
+      "forkOf": "cloudflare/cloudflare-docs",
+      "createdAt": "2025-11-29",
+      "pushedAt": "2025-12-13"
+    },
+    {
+      "name": "cloudflare-docs",
+      "owner": "RSPNOIZY",
+      "tier": "upstream",
+      "brand": "",
+      "role": "Fork: Cloudflare documentation (org copy).",
+      "language": "MDX",
+      "visibility": "public",
+      "forkOf": "cloudflare/cloudflare-docs",
+      "createdAt": "2026-04-26",
+      "pushedAt": "2026-05-13"
+    },
+    {
+      "name": "NOIZYVOX",
+      "owner": "RSPNOIZY",
+      "tier": "planned",
+      "brand": "NOIZYVOX",
+      "role": "Voice + schema core. Target home for governance/schemas promoted from NOIZYLAB.",
+      "visibility": "public",
+      "site": "https://noizyvox.com"
+    },
+    {
+      "name": "NOIZYANTHROPIC",
+      "owner": "RSPNOIZY",
+      "tier": "planned",
+      "brand": "NOIZYANTHROPIC",
+      "role": "AI governance + doctrine.",
+      "visibility": "public"
+    }
+  ],
+  "groups": {
+    "_comment": "Auto-grouping rules: lower-cased repo names / local paths are matched against these substrings (first match wins, in order). Edit freely; regenerate.",
+    "GABRIEL": [
+      "gabriel",
+      "heaven",
+      "hvs"
+    ],
+    "MC96": [
+      "mc96",
+      "mission-control",
+      "missioncontrol",
+      "zero-latency",
+      "zerolatency"
+    ],
+    "NOIZYVOX": [
+      "noizyvox",
+      "vox",
+      "voice",
+      "consent",
+      "dazeflow",
+      "elevenlabs",
+      "tts",
+      "speech"
+    ],
+    "NOIZYANTHROPIC": [
+      "noizyanthropic",
+      "anthropic",
+      "claude",
+      "mcp",
+      "agent"
+    ],
+    "NOIZYLAB": [
+      "noizylab",
+      "thegathering",
+      "the-gathering",
+      "the-gathered",
+      "gathering",
+      "console",
+      "codemaster",
+      "lab"
+    ],
+    "NOIZYFISH": [
+      "noizyfish",
+      "lifeluv",
+      "producer",
+      "beat",
+      "sample",
+      "kontakt",
+      "logic",
+      "ableton",
+      "protools"
+    ],
+    "NOIZYKIDZ": [
+      "noizykidz",
+      "kidz",
+      "kids",
+      "haptic"
+    ],
+    "DREAMCHAMBER": [
+      "dreamchamber",
+      "dream",
+      "codex",
+      "residency"
+    ],
+    "THE-OLD-GUARD": [
+      "old-guard",
+      "oldguard",
+      "resurrection",
+      "refurb"
+    ],
+    "FISH MUSIC INC": [
+      "fishmusic",
+      "fish-music",
+      "catalog",
+      "licensing",
+      "label",
+      "publishing",
+      "bmi",
+      "socan"
+    ],
+    "2NDACT": [
+      "2ndact",
+      "bridge",
+      "aiva",
+      "replit",
+      "god.local",
+      "godlocal"
+    ],
+    "NOIZYWORLD": [
+      "noizyworld",
+      "commerce",
+      "shop",
+      "store",
+      "stripe",
+      "shopify"
+    ],
+    "THE-AQUARIUM": [
+      "aquarium",
+      "aqaurium",
+      "vault",
+      "archive",
+      "masters",
+      "stems",
+      "collection"
+    ],
+    "NOIZY.AI": [
+      "noizy.ai",
+      "noizyai",
+      "noizy-ai",
+      "noizy",
+      "aeon",
+      "kvm",
+      "local-agents",
+      "cloudflare",
+      "worker",
+      "wrangler"
+    ],
+    "INFRA": [
+      "homebridge",
+      "brew",
+      "docker",
+      "n8n",
+      "forgejo",
+      "nginx",
+      "tailscale",
+      "unifi",
+      "proxmox",
+      "nas",
+      "backup"
+    ],
+    "APPLE": [
+      "swift",
+      "xcode",
+      "ios",
+      "macos",
+      "watchos",
+      "intents",
+      "shortcuts"
+    ]
+  }
+}

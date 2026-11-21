@@ -1,0 +1,168 @@
+{
+  "name": "NOIZY Empire — Google Inventory",
+  "meta": { "templateCredsSetupCompleted": false },
+  "settings": { "executionOrder": "v1", "timezone": "America/Toronto" },
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "Daily 05:45",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 200],
+      "parameters": { "rule": { "interval": [{ "field": "cronExpression", "expression": "45 5 * * *" }] } }
+    },
+    {
+      "id": "drive",
+      "name": "Drive: all files",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 0],
+      "credentials": { "googleDriveOAuth2Api": { "name": "Google Drive (NOIZY)" } },
+      "parameters": {
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "q", "value": "trashed = false" },
+            { "name": "pageSize", "value": "1000" },
+            { "name": "fields", "value": "nextPageToken,files(id,name,mimeType,createdTime,modifiedTime,size,webViewLink,parents,shared,owners(emailAddress))" },
+            { "name": "includeItemsFromAllDrives", "value": "true" },
+            { "name": "supportsAllDrives", "value": "true" },
+            { "name": "corpora", "value": "allDrives" }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": { "parameters": [{ "type": "qs", "name": "pageToken", "value": "={{ $response.body.nextPageToken }}" }] },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.nextPageToken }}",
+              "limitPagesFetched": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "youtube",
+      "name": "YouTube: my uploads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 200],
+      "onError": "continueRegularOutput",
+      "credentials": { "youTubeOAuth2Api": { "name": "YouTube (NOIZY)" } },
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "part", "value": "snippet" },
+            { "name": "forMine", "value": "true" },
+            { "name": "type", "value": "video" },
+            { "name": "maxResults", "value": "50" },
+            { "name": "order", "value": "date" }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": { "parameters": [{ "type": "qs", "name": "pageToken", "value": "={{ $response.body.nextPageToken }}" }] },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.nextPageToken }}",
+              "limitPagesFetched": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "gmail",
+      "name": "Gmail: profile totals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [240, 400],
+      "onError": "continueRegularOutput",
+      "credentials": { "gmailOAuth2": { "name": "Gmail (NOIZY)" } },
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "options": {}
+      }
+    },
+    {
+      "id": "merge",
+      "name": "Merge Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [500, 200],
+      "parameters": { "numberInputs": 3 }
+    },
+    {
+      "id": "shape",
+      "name": "Shape Inventory",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 200],
+      "parameters": {
+        "jsCode": "const all = $input.all().map(i => i.json);\nconst items = [];\nlet gmail = null;\nconst docMimes = /document|spreadsheet|presentation|pdf|text|markdown|json|rtf|msword|officedocument/i;\nconst codeMimes = /javascript|python|x-sh|typescript|zip|x-tar|gzip|json|xml|html|css|swift|rust|x-c|java/i;\nconst audioMimes = /audio|midi|x-wav|flac|aiff|mpeg/i;\nfor (const page of all) {\n  if (page.files) {\n    for (const f of page.files) {\n      const mime = f.mimeType || '';\n      if (mime === 'application/vnd.google-apps.folder') continue;\n      const kind = audioMimes.test(mime) ? 'audio' : codeMimes.test(mime) ? 'code' : docMimes.test(mime) ? 'doc' : 'file';\n      items.push({ source: 'Google:Drive', kind, id: f.id, name: f.name, mime, url: f.webViewLink, born: f.createdTime, modified: f.modifiedTime, bytes: Number(f.size || 0), shared: !!f.shared });\n    }\n  } else if (page.items && page.kind === 'youtube#searchListResponse') {\n    for (const v of page.items) {\n      const id = v.id?.videoId; if (!id) continue;\n      items.push({ source: 'Google:YouTube', kind: 'video', id, name: v.snippet?.title, url: `https://www.youtube.com/watch?v=${id}`, born: v.snippet?.publishedAt, modified: v.snippet?.publishedAt, bytes: 0 });\n    }\n  } else if (page.emailAddress && page.messagesTotal !== undefined) {\n    gmail = { emailAddress: page.emailAddress, messagesTotal: page.messagesTotal, threadsTotal: page.threadsTotal };\n  }\n}\nitems.sort((a, b) => (a.born || '').localeCompare(b.born || ''));\nconst byYear = {};\nfor (const it of items) { const y = (it.born || '').slice(0, 4); if (y) byYear[y] = (byYear[y] || 0) + 1; }\nconst inventory = {\n  source: 'google', scannedAt: new Date().toISOString(), gmail,\n  totals: { items: items.length, drive: items.filter(i => i.source === 'Google:Drive').length, youtube: items.filter(i => i.source === 'Google:YouTube').length,\n            docs: items.filter(i => i.kind === 'doc').length, code: items.filter(i => i.kind === 'code').length, audio: items.filter(i => i.kind === 'audio').length,\n            bytes: items.reduce((s, i) => s + (i.bytes || 0), 0), oldest: items[0]?.born || null, newest: items.at(-1)?.born || null },\n  byYear: Object.entries(byYear).sort().map(([year, files]) => ({ year, files })),\n  items\n};\nreturn [{ json: { inventory, content: JSON.stringify(inventory, null, 2) } }];"
+      }
+    },
+    {
+      "id": "getsha",
+      "name": "Existing file?",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [980, 200],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "url": "=https://api.github.com/repos/{{ $env.EMPIRE_HUB || 'Noizyfish/THEGATHERING' }}/contents/empire/google-inventory.json",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.GITHUB_TOKEN }}" },
+          { "name": "Accept", "value": "application/vnd.github+json" }
+        ] },
+        "options": { "response": { "response": { "neverError": true } } }
+      }
+    },
+    {
+      "id": "commit",
+      "name": "Commit to hub",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1220, 200],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.github.com/repos/{{ $env.EMPIRE_HUB || 'Noizyfish/THEGATHERING' }}/contents/empire/google-inventory.json",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [
+          { "name": "Authorization", "value": "=Bearer {{ $env.GITHUB_TOKEN }}" },
+          { "name": "Accept", "value": "application/vnd.github+json" }
+        ] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  message: `chore(empire): google inventory ${new Date().toISOString().slice(0,10)}`,\n  content: Buffer.from($('Shape Inventory').first().json.content).toString('base64'),\n  ...($json.sha ? { sha: $json.sha } : {})\n}) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Daily 05:45": { "main": [[
+      { "node": "Drive: all files", "type": "main", "index": 0 },
+      { "node": "YouTube: my uploads", "type": "main", "index": 0 },
+      { "node": "Gmail: profile totals", "type": "main", "index": 0 }
+    ]] },
+    "Drive: all files": { "main": [[{ "node": "Merge Sources", "type": "main", "index": 0 }]] },
+    "YouTube: my uploads": { "main": [[{ "node": "Merge Sources", "type": "main", "index": 1 }]] },
+    "Gmail: profile totals": { "main": [[{ "node": "Merge Sources", "type": "main", "index": 2 }]] },
+    "Merge Sources": { "main": [[{ "node": "Shape Inventory", "type": "main", "index": 0 }]] },
+    "Shape Inventory": { "main": [[{ "node": "Existing file?", "type": "main", "index": 0 }]] },
+    "Existing file?": { "main": [[{ "node": "Commit to hub", "type": "main", "index": 0 }]] }
+  }
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!--
+    Nightly local inventory on the M2 Ultra (runs 05:30, before n8n's 06:00 thru-line).
+    Install:
+      sed "s#__REPO__#$PWD#g" empire/stack/launchd/ai.noizy.empire.nightly.plist > ~/Library/LaunchAgents/ai.noizy.empire.nightly.plist
+      launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.noizy.empire.nightly.plist
+    Logs: /tmp/noizy-empire-nightly.log
+  -->
+  <key>Label</key>
+  <string>ai.noizy.empire.nightly</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO__/scripts/nightly-local-inventory.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO__</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>GATHER_LOCAL_ARGS</key>
+    <string>--docs</string>
+    <key>NOIZY_ROOT</key>
+    <string>/Users/m2ultra/NOIZY</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>5</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+  <key>RunAtLoad</key>
+  <false/>
+  <key>StandardOutPath</key>
+  <string>/tmp/noizy-empire-nightly.log</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/noizy-empire-nightly.log</string>
+</dict>
+</plist>
