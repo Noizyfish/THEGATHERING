@@ -249,7 +249,7 @@
       "owner": "Noizyfish",
       "tier": "tooling",
       "brand": "NOIZY.AI",
-      "role": "Daily Claude / Anthropic workspace.",
+      "role": "Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD.",
       "visibility": "private",
       "createdAt": "2026-03-27",
       "pushedAt": "2026-03-27"
@@ -418,6 +418,50 @@
       "brand": "NOIZYANTHROPIC",
       "role": "AI governance + doctrine.",
       "visibility": "public"
+    },
+    {
+      "name": "NOIZYLAB",
+      "owner": "NOIZYLAB-io",
+      "tier": "core",
+      "brand": "NOIZYLAB",
+      "role": "ORIGIN. First repo of the empire (org created 2025-11-20): the 412 MB lab monorepo, 38 branches, Go/TS. Earliest and largest GitHub material — the SUPERSTACK root.",
+      "language": "Go",
+      "visibility": "public",
+      "createdAt": "2025-11-20",
+      "pushedAt": "2026-10-29"
+    },
+    {
+      "name": "NOIZY.ai",
+      "owner": "NOIZYLAB-io",
+      "tier": "core",
+      "brand": "NOIZY.AI",
+      "role": "First NOIZY.AI site/app repo (Dec 2025), pre-dates the NOIZY-ai org.",
+      "language": "JavaScript",
+      "visibility": "public",
+      "createdAt": "2025-12-12",
+      "pushedAt": "2026-09-26"
+    },
+    {
+      "name": "docs.github",
+      "owner": "NOIZYLAB-io",
+      "tier": "personal",
+      "brand": "NOIZYLAB",
+      "role": "Empty docs placeholder.",
+      "language": null,
+      "visibility": "public",
+      "createdAt": "2025-12-23",
+      "pushedAt": "2025-12-23"
+    },
+    {
+      "name": "noizy.ai",
+      "owner": "NOIZY-ai",
+      "tier": "core",
+      "brand": "NOIZY.AI",
+      "role": "Canonical NOIZY master (180 MB): consent-native AI creative infrastructure. Technically a fork of cisco/openh264 repurposed 2025-12-15; on 2026-11-09 NOIZYLAB, ARCHIVE, CODE_2026 and nextjs-with-supabase were imported into it.",
+      "language": "Go",
+      "visibility": "public",
+      "createdAt": "2025-12-15",
+      "pushedAt": "2026-11-09"
     }
   ],
   "groups": {
@@ -558,6 +602,20 @@
       "watchos",
       "intents",
       "shortcuts"
+    ]
+  },
+  "superstack": {
+    "_comment": "The AI research & vibe-coding stack (not a brand family — these repos keep their brand groups). Inventory + timeline: empire/SUPERSTACK.md",
+    "repos": [
+      "Noizyfish/GABRIEL",
+      "Noizyfish/DREAMCHAMBER",
+      "NOIZY-ai/noizy.ai",
+      "RSPNOIZY/NOIZYLAB",
+      "NOIZYLAB-io/NOIZYLAB",
+      "Noizyfish/NOIZYLAB",
+      "Noizyfish/NOIZYLAB_CONSOLE_v3",
+      "Noizyfish/noizy-local-agents",
+      "Noizyfish/MC96-Mission-Control"
     ]
   }
 }

@@ -1,0 +1,49 @@
+#!/bin/bash
+# NOIZYSTDZ — one command for the studio. GORUNFREE.
+#   noizystdz setup                 install deps on GOD (uv/pip), check BlackHole 16ch, print Loopback/Audio Hijack recipe
+#   noizystdz session <name> [--voice ID] [--fx TRACK=preset]   hub + engine together, Ctrl-C ends & writes transcript
+#   noizystdz hub <name>            studio page only (phones in the room)
+#   noizystdz capture <name> ...    engine only (see engine/capture.py)
+#   noizystdz dataset <name> [--corpus NOIZYVOX-LINA]            consented clips → corpus/
+#   noizystdz reel                  build reel/NOIZYVOX-50.wav + cue-sheet.md for Friday
+#   noizystdz roster [category]     print the 50 voices + scripts (teleprompter)
+#   noizystdz test                  run the hardware-free test suite
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PY="${NOIZYSTDZ_PY:-$HERE/.venv/bin/python}"; [ -x "$PY" ] || PY=python3
+cd "$HERE"
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  setup)
+    [ -d .venv ] || python3 -m venv .venv
+    .venv/bin/pip install -q --upgrade pip
+    .venv/bin/pip install -q numpy soundfile sounddevice cryptography pytest
+    if [ "$(uname -s)" = Darwin ]; then
+      .venv/bin/pip install -q mlx-whisper || echo "mlx-whisper install failed — STT will stub until fixed"
+      if system_profiler SPAudioDataType 2>/dev/null | grep -q "BlackHole 16ch"; then echo "✅ BlackHole 16ch present"; else echo "❌ BlackHole 16ch missing → brew install blackhole-16ch (and blackhole-2ch for the FX return)"; fi
+      for app in "Loopback" "Audio Hijack"; do [ -d "/Applications/$app.app" ] && echo "✅ $app" || echo "❌ $app not in /Applications (Rogue Amoeba)"; done
+    fi
+    echo; echo "Routing recipe: see noizystdz/ROUTING.md  (Loopback → 'NOIZYSTDZ IN' 16ch; Audio Hijack → per-source blocks → BlackHole 16ch pairs)";;
+  session)
+    name="${1:?session name}"; shift
+    "$PY" -m engine.hub --session "$name" & hub=$!
+    trap 'kill $hub 2>/dev/null || true' EXIT
+    sleep 0.8
+    [ "$(uname -s)" = Darwin ] && (say -v Daniel "NOIZY studio session $name is live" &) || true
+    "$PY" -m engine.capture --session "$name" "$@";;
+  hub)      "$PY" -m engine.hub --session "${1:?session name}" "${@:2}";;
+  capture)  "$PY" -m engine.capture --session "${1:?session name}" "${@:2}";;
+  dataset)  "$PY" -m engine.dataset --session "${1:?session name}" "${@:2}";;
+  reel)     "$PY" -m engine.reel "$@";;
+  roster)
+    "$PY" - "$@" <<'PY'
+import json,sys
+r=json.load(open("characters/roster.json")); cat=sys.argv[1] if len(sys.argv)>1 else None
+for i,v in enumerate(r["voices"],1):
+    if cat and v["category"]!=cat: continue
+    print(f"\n{i:02d}. {v['name']}  [{v['category']} · {v['performer']} · fx:{v['preset']}]  — {v['note']}\n    {v['script']}")
+PY
+    ;;
+  test)     "$PY" -m pytest -q tests;;
+  *) sed -n '2,12p' "$0";;
+esac

@@ -1,0 +1,145 @@
+{
+  "$comment": "Provider registry for `empire signup`. Each provider: where to sign up, which plan, which credentials to collect (env), how to verify them, and where they plug into the empire. Facts flagged 'verify' were not confirmed against a live account at authoring time (2026-11-21).",
+  "version": 1,
+  "operator": { "legalName": "Fish Music Inc", "brand": "NOIZY", "country": "CA", "city": "Ottawa", "contact": "rsp@noizy.ai" },
+  "providers": [
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "why": "Already the backbone of MC96: Workers, D1, KV, R2, Workers AI, Pages, Access, Tunnels, DNS, Email Routing. One API token + wrangler login unlocks all of it for n8n, Forgejo, Gabriel and the nightly inventory.",
+      "products": ["Workers", "D1", "KV", "R2", "Workers AI", "AI Gateway", "Pages", "Zero Trust Access", "Tunnel", "DNS", "Email Routing", "Turnstile"],
+      "plan": "Free tier runs all of the above; Workers Paid (USD 5/mo) as D1/Workers usage grows. Zero Trust free up to 50 users.",
+      "urls": {
+        "signup": "https://dash.cloudflare.com/sign-up",
+        "console": "https://dash.cloudflare.com",
+        "token": "https://dash.cloudflare.com/profile/api-tokens",
+        "docs": "https://developers.cloudflare.com",
+        "api": "https://api.cloudflare.com/client/v4"
+      },
+      "env": [
+        { "key": "CLOUDFLARE_API_TOKEN", "secret": true, "hint": "Create Token → start from 'Edit Cloudflare Workers', then ADD Account: D1:Edit, Workers KV Storage:Edit, Workers R2 Storage:Edit, Cloudflare Pages:Edit, Access: Apps and Policies:Read, Cloudflare Tunnel:Read, Workers AI:Read, Account Settings:Read · Zone: Zone:Read, DNS:Edit, Email Routing Rules:Read — all accounts, all zones" },
+        { "key": "CLOUDFLARE_ACCOUNT_ID", "secret": false, "hint": "Dashboard → Workers & Pages → right sidebar 'Account ID' (32 hex chars)" }
+      ],
+      "verify": { "method": "GET", "url": "https://api.cloudflare.com/client/v4/user/tokens/verify", "auth": "bearer:CLOUDFLARE_API_TOKEN", "ok": ".success == true and .result.status == \"active\"" },
+      "cli": { "install": "npm i -g wrangler", "login": "wrangler login", "check": "wrangler whoami" },
+      "n8n": "Credentials → Cloudflare API (token) for Workers/D1 nodes; HTTP Request nodes use Header Auth Bearer.",
+      "steps": [
+        "Sign in (or sign up) at dash.cloudflare.com with rsp@noizy.ai. Turn on 2FA — the empire's DNS lives here.",
+        "Copy the Account ID from Workers & Pages → overview sidebar.",
+        "Profile → API Tokens → Create Token → start from 'Edit Cloudflare Workers', add the permissions in the hint, scope to all accounts/zones, create, copy once.",
+        "Paste both when prompted; `empire signup cloudflare` verifies the token.",
+        "On GOD: `npm i -g wrangler && wrangler login` so every wrangler.toml in GABRIEL deploys from one identity.",
+        "Run `empire run --only cloudflare` — every zone, Worker, D1, KV, R2, Pages project, Access app and tunnel lands in empire/cloudflare-inventory.json."
+      ],
+      "usedBy": ["GABRIEL/workers/* (20 wrangler.toml)", "mc96.fishmusicinc.workers.dev", "heaven.rsp-5f3.workers.dev", "D1: mc96-central, aeon-god-kernel, noizylab-repairs, rsp-master-budget, gabriel-mcp-steps", "R2: mc96-voice-cache, gabriel-scans, gabriel-references"]
+    },
+    {
+      "id": "proton",
+      "name": "Proton",
+      "why": "Swiss, end-to-end encrypted home for the empire's identity: Mail (rsp@noizy.ai on a custom domain), Drive (encrypted off-site copy of AQUARIUM manifests + docs), Pass (every key from this sign-up lives there), Calendar, VPN. Private by default — matches the HVS / consent doctrine.",
+      "products": ["Mail", "Drive", "Pass", "Calendar", "VPN", "Mail Bridge"],
+      "plan": "Proton Unlimited (Mail + Drive 500 GB + Pass + VPN, custom domains, Bridge). Proton Business Suite if staff mailboxes are needed. Bridge requires a paid plan.",
+      "urls": {
+        "signup": "https://account.proton.me/signup?plan=bundle2022",
+        "console": "https://account.proton.me",
+        "domains": "https://account.proton.me/u/0/mail/domain-names",
+        "bridge": "https://proton.me/mail/bridge",
+        "pass": "https://proton.me/pass/download",
+        "docs": "https://proton.me/support"
+      },
+      "env": [
+        { "key": "PROTON_BRIDGE_USER", "secret": false, "hint": "Bridge → account → Mailbox details → Username (your Proton address)" },
+        { "key": "PROTON_BRIDGE_PASSWORD", "secret": true, "hint": "Bridge → Mailbox details → Password (Bridge-generated, NOT your login password)" },
+        { "key": "PROTON_BRIDGE_IMAP", "secret": false, "default": "127.0.0.1:1143", "hint": "Bridge IMAP (default 1143, STARTTLS)" },
+        { "key": "PROTON_BRIDGE_SMTP", "secret": false, "default": "127.0.0.1:1025", "hint": "Bridge SMTP (default 1025, STARTTLS)" }
+      ],
+      "verify": { "method": "tcp", "url": "${PROTON_BRIDGE_IMAP}", "ok": "port open" },
+      "cli": { "install": "brew install --cask proton-mail-bridge proton-pass && brew install rclone", "login": "rclone config → new remote 'proton' → type protondrive → username/password/2FA", "check": "rclone about proton:" },
+      "n8n": "Credentials → IMAP (host 127.0.0.1, port 1143, STARTTLS, Bridge user/password) and SMTP (port 1025). n8n must reach the Bridge: run n8n on GOD with host networking, or point it at host.docker.internal.",
+      "steps": [
+        "Create the account at account.proton.me (Unlimited). Write the recovery phrase down offline — not in Pass.",
+        "Add custom domain noizy.ai: Settings → Domain names → add → copy the DNS records → create them in Cloudflare DNS → verify → add rsp@noizy.ai.",
+        "Install Proton Mail Bridge on GOD, sign in, keep it running at login. Copy the Bridge mailbox password.",
+        "Install Proton Pass (Mac + iPhone). Create vault 'NOIZY Empire'. Every key `empire signup` collects goes in there too.",
+        "rclone config → remote 'proton' (protondrive) → `rclone about proton:` to confirm.",
+        "Paste Bridge user/password when prompted; `empire signup proton` checks the Bridge port."
+      ],
+      "notes": "Proton has no public REST API for Mail; Bridge (IMAP/SMTP) is the integration surface. Proton Drive via rclone `protondrive` backend (community-maintained; may lag Proton changes).",
+      "usedBy": ["n8n email nodes (Bridge)", "docs/inventory backup (rclone proton:)", "all credentials (Pass)"]
+    },
+    {
+      "id": "infomaniak",
+      "name": "Infomaniak",
+      "why": "Swiss, green, GDPR-strict hosting with a real REST API: kDrive (large encrypted-at-rest storage for AQUARIUM mirrors), kSuite mail/calendar/kMeet/kChat, Public Cloud (OpenStack VMs + S3 for Forgejo/n8n off-GOD), domains, Swiss Backup, Newsletter, and AI Tools — Swiss-hosted open LLMs/Whisper behind an OpenAI-compatible API: the sovereign fallback for Gabriel when Anthropic is unreachable.",
+      "products": ["kDrive", "kSuite Mail", "Public Cloud", "Swiss Backup", "AI Tools", "Domains", "Newsletter", "kMeet", "kChat"],
+      "plan": "kSuite Pro (mail + kDrive) or standalone kDrive Pro; AI Tools billed per token; Public Cloud pay-as-you-go.",
+      "urls": {
+        "signup": "https://www.infomaniak.com/en/ksuite",
+        "console": "https://manager.infomaniak.com",
+        "token": "https://manager.infomaniak.com/v3/ng/accounts/token/list",
+        "docs": "https://developer.infomaniak.com",
+        "api": "https://api.infomaniak.com",
+        "ai": "https://www.infomaniak.com/en/hosting/ai-tools"
+      },
+      "env": [
+        { "key": "INFOMANIAK_TOKEN", "secret": true, "hint": "Manager → profile → Developer → API tokens → create 'NOIZY Empire' with drive, mail, ai, dns, backup scopes" },
+        { "key": "INFOMANIAK_DRIVE_ID", "secret": false, "hint": "kDrive URL: ksuite.infomaniak.com/all/kdrive/app/drive/<DRIVE_ID>/" },
+        { "key": "INFOMANIAK_AI_PRODUCT_ID", "secret": false, "hint": "Manager → AI Tools → product id in the URL (OpenAI-compatible endpoint needs it)" },
+        { "key": "INFOMANIAK_WEBDAV_USER", "secret": false, "hint": "Your Infomaniak login email (kDrive WebDAV / rclone)" },
+        { "key": "INFOMANIAK_WEBDAV_PASSWORD", "secret": true, "hint": "Manager → kDrive → Settings → Application passwords (not your login password)" }
+      ],
+      "verify": { "method": "GET", "url": "https://api.infomaniak.com/1/profile", "auth": "bearer:INFOMANIAK_TOKEN", "ok": ".result == \"success\"" },
+      "cli": { "install": "brew install rclone", "login": "rclone config → webdav → url https://connect.drive.infomaniak.com/<DRIVE_ID> → vendor other → login email + application password; name 'kdrive'", "check": "rclone about kdrive:" },
+      "n8n": "Header Auth (Authorization: Bearer $INFOMANIAK_TOKEN) for api.infomaniak.com; OpenAI credential with base URL https://api.infomaniak.com/1/ai/$INFOMANIAK_AI_PRODUCT_ID/openai for the AI Tools fallback.",
+      "steps": [
+        "Create the Infomaniak account (company: Fish Music Inc, CA). Enable 2FA.",
+        "Order kSuite (or kDrive); note the Drive ID from the kDrive URL.",
+        "Manager → Developer → API tokens → create 'NOIZY Empire' with drive/mail/ai/dns scopes → copy once.",
+        "kDrive → Settings → Application passwords → create 'rclone GOD' → use with rclone webdav remote 'kdrive'.",
+        "AI Tools → enable → note the product id → `empire signup infomaniak` lists the models it can reach.",
+        "Paste token + IDs when prompted; verification calls /1/profile."
+      ],
+      "notes": "verify: AI Tools endpoint shape and token scopes against developer.infomaniak.com once the account exists. connect.drive.infomaniak.com is the documented kDrive WebDAV endpoint.",
+      "usedBy": ["Gabriel brain fallback (OpenAI-compatible)", "AQUARIUM off-site mirror (rclone kdrive:)", "Forgejo/n8n Public Cloud VM (optional)"]
+    },
+    {
+      "id": "todaq",
+      "name": "TODAQ Micro (Qatom)",
+      "why": "Micropayments with 0% take rate and sub-second settlement for NOIZY content: pay-per-listen / pay-per-line voice assets, LIFELUV passes, agent-to-agent paywalls (Gabriel can sell and buy). Every payment settles as a TODA file with its own proof of provenance — an auditable receipt trail for voice IP.",
+      "products": ["Qatom payments API v4", "@todaqmicro/payment-js (browser)", "MCP server mcp.m.todaq.net", "Qatom Authenticator app"],
+      "plan": "Builder: free (1 agent, 5 items, 25 tx/mo). Pro: USD 20/mo. Max: USD 300/mo. 0% take rate; card top-ups via Stripe (≈ USD 0.50 min); cash-out by ACH to a US or Canadian bank (USD 1 flat, 10 USD-TDN min). Priced in USD-TDN (1 = USD 1); no CAD DQ found.",
+      "urls": {
+        "signup": "https://pay.m.todaq.net/v4/account  (POST, no auth — `empire signup todaq` does it)",
+        "staging": "https://pay.stage.m.todaq.net",
+        "console": "https://www.qatom.ai",
+        "docs": "https://docs.m.todaq.net",
+        "openapi": "https://pay.m.todaq.net/v4/openapi.json",
+        "github": "https://github.com/TODAQmicro",
+        "topup": "https://load.m.todaq.net",
+        "mcp": "https://mcp.m.todaq.net/mcp"
+      },
+      "env": [
+        { "key": "TODAQ_ENV", "secret": false, "default": "staging", "hint": "staging | production — staging has its own accounts and its own DQ" },
+        { "key": "TODAQ_CLIENT_ID", "secret": false, "hint": "from POST /v4/account → secrets[].client_id" },
+        { "key": "TODAQ_CLIENT_SECRET", "secret": true, "hint": "from POST /v4/account → secrets[].client_secret — returned ONCE" },
+        { "key": "TODAQ_PUBLIC_SECRET", "secret": false, "hint": "from POST /v4/account → secrets[].public_secret — safe for web pages (payment-js)" },
+        { "key": "TODAQ_TWIN_ID", "secret": false, "hint": "from POST /v4/twin → id (your wallet + merchant account)" },
+        { "key": "TODAQ_TWIN_KEY", "secret": true, "hint": "from POST /v4/twin → key — server-side only" },
+        { "key": "TODAQ_DQ", "secret": false, "hint": "digital quantity hash from GET /v4/dq (USD TDN)" }
+      ],
+      "verify": { "method": "node", "url": "empire/accounts/todaq/qatom.mjs whoami", "ok": "token minted + twin balances readable" },
+      "cli": { "install": "node ≥ 18 (fetch built in) — no SDK needed; browser: npm i @todaqmicro/payment-js@^0.5.6", "login": "node empire/accounts/todaq/qatom.mjs signup", "check": "node empire/accounts/todaq/qatom.mjs whoami" },
+      "n8n": "Header Auth Bearer (token minted by the Code node from client_id:client_secret Basic auth → POST /v4/account/oauth/token, 1 h). No webhooks exist: the browser `payment` event → your server → POST /v4/payment/{hash}/validate redeems once.",
+      "steps": [
+        "`empire signup todaq` → POST /v4/account on STAGING, stores client_id / client_secret / public_secret (secret shown once — also put it in Proton Pass).",
+        "Same run: mints an OAuth token, reads GET /v4/dq, creates your twin (POST /v4/twin) and one test commodity ('NOIZY test line — 0.25').",
+        "Drop the payment element on a page: loadMicroPayments(PUBLIC_SECRET, {apiVersion:'main'}) → elements().create('payment',{hash}) → listen for `payment` on document → POST to your server → validate. (empire/accounts/todaq/README.md has the snippet.)",
+        "Buy test TDN on staging (load.m.todaq.net), pay your own item, confirm GET /v4/catalog/revenue moves.",
+        "Repeat with TODAQ_ENV=production. Cash-out and on-ramp: email support@todaq.net (Buy TDN 0.50–100 USD); keep RBC-backed reserve note for finance.",
+        "Install the Qatom Authenticator on the iPhone 15 Pro Max (2FA for buyer side); for LUCY, host the payment element in a WKWebView and relay the `payment` event to the Gabriel daemon (no native iOS SDK exists)."
+      ],
+      "notes": "Rebranded Qatom (TODAQ Financial Inc, Toronto). Official Node SDK @todaqmicro/payment-node 0.4.0 targets the old /v2 API and logs secrets to console — do not use; empire/accounts/todaq/qatom.mjs calls /v4 directly. payment-ios / android / flutter repos are empty stubs. verify: KYC for cash-out, Console URL, buyer geography.",
+      "usedBy": ["LUCY (pay-per-asset via WKWebView)", "NOIZYWORLD sovereign commerce", "LIFELUV passes", "Gabriel agent paywalls (POST /v4/paywall)"]
+    }
+  ]
+}

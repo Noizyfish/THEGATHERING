@@ -2,9 +2,11 @@
 
 # MC96ECO UNIVERSE — THE NOIZY EMPIRE, ONE MAP
 
-> 35 repositories across **RSPNOIZY** (org) and **Noizyfish** (personal), 2 planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: Noizyfish/THEGATHERING.
+> 39 repositories across **Noizyfish**, **RSPNOIZY** (both user accounts) and the orgs **NOIZYLAB-io** (origin, 2025-11-20) and **NOIZY-ai**, 2 planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: Noizyfish/THEGATHERING.
 
 **killSwitchHolder:** RSP_001 | **covenant:** 75/25 | **canon:** noizy.ai
+
+**SUPERSTACK** (AI research & vibe-coding core, 9 repos): [Noizyfish/GABRIEL](https://github.com/Noizyfish/GABRIEL) · [Noizyfish/DREAMCHAMBER](https://github.com/Noizyfish/DREAMCHAMBER) · [NOIZY-ai/noizy.ai](https://github.com/NOIZY-ai/noizy.ai) · [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) · [NOIZYLAB-io/NOIZYLAB](https://github.com/NOIZYLAB-io/NOIZYLAB) · [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) · [Noizyfish/NOIZYLAB_CONSOLE_v3](https://github.com/Noizyfish/NOIZYLAB_CONSOLE_v3) · [Noizyfish/noizy-local-agents](https://github.com/Noizyfish/noizy-local-agents) · [Noizyfish/MC96-Mission-Control](https://github.com/Noizyfish/MC96-Mission-Control) — inventory, timeline and grouping in [SUPERSTACK.md](SUPERSTACK.md). FOSS supply chain: [foss/GREATEST_HITZ.md](foss/GREATEST_HITZ.md).
 
 ## How to pull everything into one workspace
 
@@ -28,24 +30,31 @@ experiment  ->  RSPNOIZY/NOIZYLAB  (canonical lab)
 
 ## The Thru-Line
 
-**Late 2025 → now: the vibe-coding era** — 2025-12 to 2026-11. 25 things born across GitHub. Read top to bottom: this is the story.
+**Late 2025 → now: the vibe-coding era** — 2025-11 to 2026-11. 29 things born across GitHub. Read top to bottom: this is the story.
 
 _No local inventory yet. Run `scripts/gather-local.sh` on the M2 Ultra with the drives mounted to colour in the local half of the story._
 
 _No Google inventory yet. Import `empire/stack/n8n/google-inventory.json` into n8n (Drive + YouTube + Gmail) or run `scripts/gather-google.sh` with rclone._
 
+_No Cloudflare inventory yet. `empire signup cloudflare` then `empire run --only cloudflare` to pull every zone, Worker, D1, KV, R2, Pages, Access app and tunnel into the story._
+
+- **2025-11**
+  - `GitHub` [NOIZYLAB-io/NOIZYLAB](https://github.com/NOIZYLAB-io/NOIZYLAB) · NOIZYLAB · ORIGIN. First repo of the empire (org created 2025-11-20): the 412 MB lab monorepo, 38 branches, Go/TS. Earliest and largest GitHub material — the SUPERSTACK root. _(→ 2026-10-29)_
 - **2025-12**
   - `GitHub` [Noizyfish/GABRIEL](https://github.com/Noizyfish/GABRIEL) · GABRIEL · Gabriel agent master code location. _(→ 2026-09-20)_
   - `GitHub` [Noizyfish/NOIZYLAB-GABRIEL](https://github.com/Noizyfish/NOIZYLAB-GABRIEL) · GABRIEL · Gabriel master code location (earlier edition). _(→ 2026-04-04)_
+  - `GitHub` [NOIZYLAB-io/NOIZY.ai](https://github.com/NOIZYLAB-io/NOIZY.ai) · NOIZY.AI · First NOIZY.AI site/app repo (Dec 2025), pre-dates the NOIZY-ai org. _(→ 2026-09-26)_
+  - `GitHub` [NOIZY-ai/noizy.ai](https://github.com/NOIZY-ai/noizy.ai) · NOIZY.AI · Canonical NOIZY master (180 MB): consent-native AI creative infrastructure. Technically a fork of cisco/openh264 repurposed 2025-12-15; on 2026-11-09 NOIZYLAB, ARCHIVE, CODE_2026 and nextjs-with-supabase were imported into it. _(→ 2026-11-09)_
   - `GitHub` [Noizyfish/NOIZYLAB_CONSOLE_v3](https://github.com/Noizyfish/NOIZYLAB_CONSOLE_v3) · NOIZYLAB · Lab console, v3. _(→ 2026-09-23)_
   - `GitHub` [Noizyfish/MC96-Mission-Control](https://github.com/Noizyfish/MC96-Mission-Control) · MC96 · MC96 Zero Latency AI Mission Control.
   - `GitHub` [Noizyfish/CODEMASTER](https://github.com/Noizyfish/CODEMASTER) · NOIZYLAB · Code archive: legacy scripts, backups and archived code.
+  - `GitHub` [NOIZYLAB-io/docs.github](https://github.com/NOIZYLAB-io/docs.github) · NOIZYLAB · Empty docs placeholder.
   - `GitHub` [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) · NOIZYLAB · Shell automation and lab scripts. _(→ 2026-11-06)_
 - **2026-02**
   - `GitHub` [Noizyfish/NOIZYFISH_THE_AQAURIUM](https://github.com/Noizyfish/NOIZYFISH_THE_AQAURIUM) · THE-AQUARIUM · Audio vault, 40-year collection. CLIENT#1 RSP001.
   - `GitHub` [Noizyfish/desktop-tutorial](https://github.com/Noizyfish/desktop-tutorial) · personal · GitHub Desktop tutorial repository.
 - **2026-03**
-  - `GitHub` [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) · NOIZY.AI · Daily Claude / Anthropic workspace.
+  - `GitHub` [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) · NOIZY.AI · Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD.
   - `GitHub` [Noizyfish/swift-library](https://github.com/Noizyfish/swift-library) · NOIZYLAB · Swift library scaffolding.
 - **2026-04**
   - `GitHub` [RSPNOIZY/NOIZYKIDZ](https://github.com/RSPNOIZY/NOIZYKIDZ) · NOIZYKIDZ · Youth division. Haptic music education. Deaf-first. Autism-calm. Every kid plays. _(→ 2026-05-06)_
@@ -74,7 +83,7 @@ _Nothing dated 1996–2025-11 yet. Mount the HDDs and run `scripts/gather-local.
 
 ## Everything, grouped
 
-27 things from GitHub clustered into 17 families by name and path (rules: `groups` in repos.json).
+31 things from GitHub clustered into 17 families by name and path (rules: `groups` in repos.json).
 
 ### GABRIEL · 2
 
@@ -93,10 +102,12 @@ _Nothing dated 1996–2025-11 yet. Mount the HDDs and run `scripts/gather-local.
 
 - `GitHub` [RSPNOIZY/NOIZYANTHROPIC](https://github.com/RSPNOIZY/NOIZYANTHROPIC) · planned
 
-### NOIZYLAB · 6
+### NOIZYLAB · 8
 
+- `GitHub` [NOIZYLAB-io/NOIZYLAB](https://github.com/NOIZYLAB-io/NOIZYLAB) · repo · born 2025-11-20
 - `GitHub` [Noizyfish/NOIZYLAB_CONSOLE_v3](https://github.com/Noizyfish/NOIZYLAB_CONSOLE_v3) · repo · born 2025-12-17
 - `GitHub` [Noizyfish/CODEMASTER](https://github.com/Noizyfish/CODEMASTER) · repo · born 2025-12-23
+- `GitHub` [NOIZYLAB-io/docs.github](https://github.com/NOIZYLAB-io/docs.github) · repo · born 2025-12-23
 - `GitHub` [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) · repo · born 2025-12-28
 - `GitHub` [Noizyfish/swift-library](https://github.com/Noizyfish/swift-library) · repo · born 2026-03-30
 - `GitHub` [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) · repo · born 2026-04-05
@@ -134,8 +145,10 @@ _Nothing dated 1996–2025-11 yet. Mount the HDDs and run `scripts/gather-local.
 
 - `GitHub` [Noizyfish/NOIZYFISH_THE_AQAURIUM](https://github.com/Noizyfish/NOIZYFISH_THE_AQAURIUM) · repo · born 2026-02-11
 
-### NOIZY.AI · 4
+### NOIZY.AI · 6
 
+- `GitHub` [NOIZYLAB-io/NOIZY.ai](https://github.com/NOIZYLAB-io/NOIZY.ai) · repo · born 2025-12-12
+- `GitHub` [NOIZY-ai/noizy.ai](https://github.com/NOIZY-ai/noizy.ai) · repo · born 2025-12-15
 - `GitHub` [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) · repo · born 2026-03-27
 - `GitHub` [RSPNOIZY/RSPNOIZY](https://github.com/RSPNOIZY/RSPNOIZY) · repo · born 2026-04-04
 - `GitHub` [Noizyfish/aeon-magick-ai-computer-control](https://github.com/Noizyfish/aeon-magick-ai-computer-control) · repo · born 2026-10-05
@@ -158,8 +171,9 @@ _Nothing dated 1996–2025-11 yet. Mount the HDDs and run `scripts/gather-local.
 
 Candidates to merge or delete. A local clone of its own GitHub repo is fine; two unrelated copies are not.
 
-- **noizylab** → `GitHub` [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) · `GitHub` [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB)
+- **noizylab** → `GitHub` [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) · `GitHub` [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) · `GitHub` [NOIZYLAB-io/NOIZYLAB](https://github.com/NOIZYLAB-io/NOIZYLAB)
 - **thegathering** → `GitHub` [Noizyfish/THEGATHERING](https://github.com/Noizyfish/THEGATHERING) · `GitHub` [Noizyfish/THE-GATHERING](https://github.com/Noizyfish/THE-GATHERING)
+- **noizy.ai** → `GitHub` [NOIZYLAB-io/NOIZY.ai](https://github.com/NOIZYLAB-io/NOIZY.ai) · `GitHub` [NOIZY-ai/noizy.ai](https://github.com/NOIZY-ai/noizy.ai)
 
 
 ## Registry by tier
@@ -170,6 +184,9 @@ Candidates to merge or delete. A local clone of its own GitHub repo is fine; two
 
 | Repo | Brand | Role | Lang | Vis | Created | Last push |
 |---|---|---|---|---|---|---|
+| [NOIZYLAB-io/NOIZYLAB](https://github.com/NOIZYLAB-io/NOIZYLAB) | NOIZYLAB | ORIGIN. First repo of the empire (org created 2025-11-20): the 412 MB lab monorepo, 38 branches, Go/TS. Earliest and largest GitHub material — the SUPERSTACK root. | Go | public | 2025-11-20 | 2026-10-29 |
+| [NOIZYLAB-io/NOIZY.ai](https://github.com/NOIZYLAB-io/NOIZY.ai) | NOIZY.AI | First NOIZY.AI site/app repo (Dec 2025), pre-dates the NOIZY-ai org. | JavaScript | public | 2025-12-12 | 2026-09-26 |
+| [NOIZY-ai/noizy.ai](https://github.com/NOIZY-ai/noizy.ai) | NOIZY.AI | Canonical NOIZY master (180 MB): consent-native AI creative infrastructure. Technically a fork of cisco/openh264 repurposed 2025-12-15; on 2026-11-09 NOIZYLAB, ARCHIVE, CODE_2026 and nextjs-with-supabase were imported into it. | Go | public | 2025-12-15 | 2026-11-09 |
 | [RSPNOIZY/NOIZYKIDZ](https://github.com/RSPNOIZY/NOIZYKIDZ) | NOIZYKIDZ | Youth division. Haptic music education. Deaf-first. Autism-calm. Every kid plays. — [site](https://noizykidz.com) | HTML | public | 2026-04-04 | 2026-05-06 |
 | [RSPNOIZY/DREAMCHAMBER](https://github.com/RSPNOIZY/DREAMCHAMBER) | DREAMCHAMBER | Creative residency. 500-Year Codex Creative Sanctuary for human-AI collaboration. | HTML | public | 2026-04-04 | 2026-10-13 |
 | [RSPNOIZY/RSPNOIZY](https://github.com/RSPNOIZY/RSPNOIZY) | NOIZY.AI | Organisation profile README. — [site](https://noizy.ai) | — | public | 2026-04-04 | 2026-05-06 |
@@ -193,7 +210,7 @@ Candidates to merge or delete. A local clone of its own GitHub repo is fine; two
 | [Noizyfish/MC96-Mission-Control](https://github.com/Noizyfish/MC96-Mission-Control) | MC96 | MC96 Zero Latency AI Mission Control. | Python | public | 2025-12-18 | 2025-12-18 |
 | [Noizyfish/CODEMASTER](https://github.com/Noizyfish/CODEMASTER) | NOIZYLAB | Code archive: legacy scripts, backups and archived code. | — | public | 2025-12-23 | 2025-12-23 |
 | [Noizyfish/NOIZYLAB](https://github.com/Noizyfish/NOIZYLAB) | NOIZYLAB | Shell automation and lab scripts. | Shell | public | 2025-12-28 | 2026-11-06 |
-| [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) | NOIZY.AI | Daily Claude / Anthropic workspace. | — | private | 2026-03-27 | 2026-03-27 |
+| [Noizyfish/CLAUDE-TODAY](https://github.com/Noizyfish/CLAUDE-TODAY) | NOIZY.AI | Daily Claude / Anthropic workspace. Audited 2026-11-21: repo is EMPTY (0 commits, default branch NOIZY.AI, never pushed since 2026-03-27). Filled nightly by scripts/gather-claude.sh from GOD. | — | private | 2026-03-27 | 2026-03-27 |
 | [Noizyfish/swift-library](https://github.com/Noizyfish/swift-library) | NOIZYLAB | Swift library scaffolding. | Swift | private | 2026-03-30 | 2026-03-30 |
 | [RSPNOIZY/NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) | NOIZYLAB | Canonical upstream of this hub. Research lab + shared tooling core (MC96 common, Gabriel, voice engine, LIFELUV). — [site](https://noizylab.ca) | TypeScript | public | 2026-04-05 | 2026-05-30 |
 | [Noizyfish/aeon-magick-ai-computer-control](https://github.com/Noizyfish/aeon-magick-ai-computer-control) | NOIZY.AI | Universal AI computer-control KVM (REST API + MCP) with private networking stack. | Rust | public | 2026-10-05 | 2026-09-23 |
@@ -206,6 +223,7 @@ Candidates to merge or delete. A local clone of its own GitHub repo is fine; two
 
 | Repo | Brand | Role | Lang | Vis | Created | Last push |
 |---|---|---|---|---|---|---|
+| [NOIZYLAB-io/docs.github](https://github.com/NOIZYLAB-io/docs.github) | NOIZYLAB | Empty docs placeholder. | — | public | 2025-12-23 | 2025-12-23 |
 | [Noizyfish/NOIZYFISH_THE_AQAURIUM](https://github.com/Noizyfish/NOIZYFISH_THE_AQAURIUM) | THE-AQUARIUM | Audio vault, 40-year collection. CLIENT#1 RSP001. | — | private | 2026-02-11 | 2026-02-11 |
 | [Noizyfish/desktop-tutorial](https://github.com/Noizyfish/desktop-tutorial) | — | GitHub Desktop tutorial repository. | — | private | 2026-02-13 | 2026-02-13 |
 | [Noizyfish/RSPOO1---Robert-Stephen-Plowman](https://github.com/Noizyfish/RSPOO1---Robert-Stephen-Plowman) | RSP001 | Founder repo. | — | private | 2026-09-15 | 2026-09-15 |

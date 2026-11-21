@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Renders empire/EMPIRE.md from empire/repos.json (+ empire/local-inventory.json and empire/google-inventory.json when present).
+// Renders empire/EMPIRE.md from empire/repos.json (+ empire/local-inventory.json, empire/google-inventory.json,
+// empire/cloudflare-inventory.json when present).
 //   node scripts/build-empire.mjs          -> write EMPIRE.md
 //   node scripts/build-empire.mjs --check  -> exit 1 if EMPIRE.md is stale or manifest is invalid
 
@@ -70,6 +71,9 @@ try { inventory = JSON.parse(readFileSync(inventoryPath, "utf8")); } catch {}
 const googlePath = join(root, "empire", "google-inventory.json");
 let google = null;
 try { google = JSON.parse(readFileSync(googlePath, "utf8")); } catch {}
+const cloudflarePath = join(root, "empire", "cloudflare-inventory.json");
+let cloudflare = null;
+try { cloudflare = JSON.parse(readFileSync(cloudflarePath, "utf8")); } catch {}
 // Only code-ish and video items become story events; docs/audio/files are summarised per year.
 const googleStoryItems = () => (google?.items ?? []).filter((i) => i.kind === "code" || i.kind === "video");
 
@@ -92,7 +96,7 @@ function storyEvents() {
     for (const r of inventory.repos ?? []) {
       const date = (r.firstCommit || r.oldestFileBorn || r.born || "").slice(0, 10);
       if (!date) continue;
-      const mirrored = r.remote && /github\.com[/:](RSPNOIZY|Noizyfish)\//i.test(r.remote);
+      const mirrored = r.remote && /github\.com[/:](RSPNOIZY|Noizyfish|NOIZYLAB-io|NOIZY-ai)\//i.test(r.remote);
       if (mirrored) continue; // already told via its GitHub repo
       ev.push({ date, src: srcTag(r.path), label: `\`${r.path}\``, brand: "local git", role: `${r.commits} commits${r.dirty ? ", uncommitted changes" : ""}${r.remote ? "" : ", NO REMOTE"} · ${fmtBytes(r.bytes)}`, until: (r.lastCommit || r.newestFileBorn || "").slice(0, 10) });
     }
@@ -101,6 +105,22 @@ function storyEvents() {
       if (!date) continue;
       ev.push({ date, src: srcTag(p.path), label: `\`${p.path}\``, brand: "loose project", role: `${p.marker} · not in git · ${fmtBytes(p.bytes)}`, until: (p.newestFileBorn || p.modified || "").slice(0, 10) });
     }
+  }
+  for (const w of cloudflare?.live?.workers ?? []) {
+    const date = (w.createdOn || "").slice(0, 10);
+    if (date) ev.push({ date, src: "Cloudflare", label: `\`${w.name}\` (Worker)`, brand: "edge", role: `Worker${w.usageModel ? ` · ${w.usageModel}` : ""}`, until: (w.modifiedOn || "").slice(0, 10) });
+  }
+  for (const d of cloudflare?.live?.d1 ?? []) {
+    const date = (d.createdAt || "").slice(0, 10);
+    if (date) ev.push({ date, src: "Cloudflare", label: `\`${d.name}\` (D1)`, brand: "edge", role: `D1 database${d.tables != null ? ` · ${d.tables} tables` : ""}${d.sizeBytes ? ` · ${fmtBytes(d.sizeBytes)}` : ""}` });
+  }
+  for (const b of cloudflare?.live?.r2 ?? []) {
+    const date = (b.createdOn || "").slice(0, 10);
+    if (date) ev.push({ date, src: "Cloudflare", label: `\`${b.name}\` (R2)`, brand: "edge", role: `R2 bucket${b.location ? ` · ${b.location}` : ""}` });
+  }
+  for (const p of cloudflare?.live?.pages ?? []) {
+    const date = (p.createdOn || "").slice(0, 10);
+    if (date) ev.push({ date, src: "Cloudflare", label: p.production ? `[${p.name}](${p.production})` : `\`${p.name}\``, brand: "edge", role: "Pages project" });
   }
   for (const i of googleStoryItems()) {
     const date = (i.born || i.modified || "").slice(0, 10);
@@ -136,6 +156,13 @@ function timeline() {
     lines.push(`_Google scanned ${google.scannedAt.slice(0, 10)}: ${g.drive} Drive files (${g.docs} docs, ${g.code} code, ${g.audio} audio, ${fmtBytes(g.bytes)}), ${g.youtube} YouTube uploads${google.gmail ? `, ${google.gmail.messagesTotal} Gmail messages` : ""}; oldest ${(g.oldest || "?").slice(0, 10)}._`, "");
   } else {
     lines.push("_No Google inventory yet. Import `empire/stack/n8n/google-inventory.json` into n8n (Drive + YouTube + Gmail) or run `scripts/gather-google.sh` with rclone._", "");
+  }
+  if (cloudflare) {
+    const t = cloudflare.totals;
+    const drift = cloudflare.drift ?? {};
+    lines.push(`_Cloudflare scanned ${cloudflare.scannedAt.slice(0, 10)}: ${t.zones} zones, ${t.workers} Workers live (${t.declaredWorkers} declared in ${t.wranglerFiles} wrangler.toml), ${t.d1} D1, ${t.kv} KV, ${t.r2} R2, ${t.pages} Pages, ${t.access} Access apps, ${t.tunnels} tunnels${(drift.declaredNotDeployed?.length) ? ` · **${drift.declaredNotDeployed.length} declared but not deployed**: ${drift.declaredNotDeployed.map((n) => `\`${n}\``).join(", ")}` : ""}${(drift.deployedNotDeclared?.length) ? ` · **${drift.deployedNotDeclared.length} deployed but not in any repo**: ${drift.deployedNotDeclared.map((n) => `\`${n}\``).join(", ")}` : ""}._`, "");
+  } else {
+    lines.push("_No Cloudflare inventory yet. `empire signup cloudflare` then `empire run --only cloudflare` to pull every zone, Worker, D1, KV, R2, Pages, Access app and tunnel into the story._", "");
   }
   for (const m of months) {
     lines.push(`- **${m}**`);
@@ -202,6 +229,12 @@ function allThings() {
   for (const p of inventory?.looseProjects ?? []) {
     things.push({ key: p.name.toLowerCase(), group: groupOf(p.path), src: srcTag(p.path), label: `\`${p.path}\``, date: (p.oldestFileBorn || p.born || p.modified || "").slice(0, 10), kind: `loose (${p.marker})`, remote: "" });
   }
+  const cfThing = (name, kind, date) => things.push({ key: name.toLowerCase(), group: groupOf(name), src: "Cloudflare", label: `\`${name}\``, date: (date || "").slice(0, 10), kind, remote: "" });
+  for (const w of cloudflare?.live?.workers ?? []) cfThing(w.name, "Worker", w.createdOn);
+  for (const d of cloudflare?.live?.d1 ?? []) cfThing(d.name, "D1 database", d.createdAt);
+  for (const b of cloudflare?.live?.r2 ?? []) cfThing(b.name, "R2 bucket", b.createdOn);
+  for (const p of cloudflare?.live?.pages ?? []) cfThing(p.name, "Pages project", p.createdOn);
+  for (const w of cloudflare?.wrangler ?? []) if (w.name) things.push({ key: w.name.toLowerCase(), group: groupOf(`${w.file} ${w.name}`), src: "wrangler.toml", label: `\`${w.file}\``, date: "", kind: "declared Worker", remote: "" });
   for (const i of googleStoryItems()) {
     things.push({ key: (i.name || "").toLowerCase().replace(/\.[a-z0-9]+$/, ""), group: groupOf(`${i.path ?? ""} ${i.name ?? ""}`), src: i.source, label: i.url ? `[${i.name}](${i.url})` : `\`${i.path ?? i.name}\``, date: (i.born || i.modified || "").slice(0, 10), kind: i.kind === "video" ? "YouTube upload" : `Drive ${i.mime || "file"}`, remote: i.url || "" });
   }
@@ -253,9 +286,11 @@ function header() {
     "",
     "# MC96ECO UNIVERSE — THE NOIZY EMPIRE, ONE MAP",
     "",
-    `> ${live} repositories across **RSPNOIZY** (org) and **Noizyfish** (personal), ${planned} planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: ${manifest.hub}.`,
+    `> ${live} repositories across **Noizyfish**, **RSPNOIZY** (both user accounts) and the orgs **NOIZYLAB-io** (origin, 2025-11-20) and **NOIZY-ai**, ${planned} planned, plus every git repo, loose project and document on the M2 Ultra and the drives. Hub: ${manifest.hub}.`,
     "",
     `**killSwitchHolder:** ${manifest.killSwitchHolder} | **covenant:** ${manifest.covenant} | **canon:** ${manifest.canon}`,
+    "",
+    `**SUPERSTACK** (AI research & vibe-coding core, ${(manifest.superstack?.repos ?? []).length} repos): ${(manifest.superstack?.repos ?? []).map((r) => `[${r}](https://github.com/${r})`).join(" · ")} — inventory, timeline and grouping in [SUPERSTACK.md](SUPERSTACK.md). FOSS supply chain: [foss/GREATEST_HITZ.md](foss/GREATEST_HITZ.md).`,
     "",
     "## How to pull everything into one workspace",
     "",

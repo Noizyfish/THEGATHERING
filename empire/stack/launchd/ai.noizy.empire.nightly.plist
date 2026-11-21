@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <!--
-    Nightly local inventory on the M2 Ultra (runs 05:30, before n8n's 06:00 thru-line).
+    Nightly `empire run` on GOD (05:30, before n8n's 06:00 thru-line): pull → repos → local → google → claude → build → publish → mirror → digest.
     Install:
       sed "s#__REPO__#$PWD#g" empire/stack/launchd/ai.noizy.empire.nightly.plist > ~/Library/LaunchAgents/ai.noizy.empire.nightly.plist
       launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/ai.noizy.empire.nightly.plist
@@ -14,7 +14,9 @@
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>__REPO__/scripts/nightly-local-inventory.sh</string>
+    <string>__REPO__/scripts/empire</string>
+    <string>run</string>
+    <string>--quiet</string>
   </array>
   <key>WorkingDirectory</key>
   <string>__REPO__</string>

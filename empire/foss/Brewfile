@@ -1,0 +1,38 @@
+# FOSS GREATEST HITZ — generated from empire/foss/hitz.json by scripts/build-foss.mjs. Do not edit.
+# brew bundle --file empire/foss/Brewfile          (core)
+# brew bundle --file empire/foss/Brewfile.optional (optional tier)
+
+tap "gbevin/tools"
+
+brew "git"  # Git · GPL-2.0-only
+brew "gh"  # GitHub CLI · MIT
+brew "jq"  # jq · MIT
+brew "python@3.12"  # Python 3.12 · PSF-2.0
+brew "uv"  # uv · MIT OR Apache-2.0
+brew "node@22"  # Node.js 22 LTS · MIT
+brew "ffmpeg"  # FFmpeg · LGPL-2.1-or-later
+brew "sox"  # SoX · GPL-2.0-or-later
+cask "blackhole-16ch"  # BlackHole 16ch + 2ch · GPL-3.0-only
+cask "blackhole-2ch"  # BlackHole 16ch + 2ch · GPL-3.0-only
+cask "open-stage-control"  # Open Stage Control · GPL-3.0-only
+brew "gbevin/tools/sendmidi"  # SendMIDI / ReceiveMIDI · GPL-3.0-only
+brew "gbevin/tools/receivemidi"  # SendMIDI / ReceiveMIDI · GPL-3.0-only
+brew "libsndfile"  # libsndfile + python-soundfile · LGPL-2.1-or-later / BSD-3-Clause
+brew "portaudio"  # python-sounddevice (PortAudio) · MIT
+brew "ollama"  # Ollama · MIT
+brew "rustup"  # Rust toolchain · MIT OR Apache-2.0
+cask "rustdesk"  # RustDesk · AGPL-3.0-only
+brew "colima"  # Docker Engine via Colima · Apache-2.0 / MIT
+brew "docker"  # Docker Engine via Colima · Apache-2.0 / MIT
+brew "docker-compose"  # Docker Engine via Colima · Apache-2.0 / MIT
+brew "rclone"  # rclone · MIT
+brew "syncthing"  # Syncthing · MPL-2.0
+brew "restic"  # restic · BSD-2-Clause
+brew "age"  # age + sops · BSD-3-Clause / MPL-2.0
+brew "sops"  # age + sops · BSD-3-Clause / MPL-2.0
+cask "tailscale"  # Tailscale client + Headscale · BSD-3-Clause
+brew "cloudflared"  # cloudflared + wrangler · Apache-2.0 / MIT OR Apache-2.0
+cask "proton-mail-bridge"  # Proton Mail Bridge + Proton Pass · GPL-3.0-only
+cask "proton-pass"  # Proton Mail Bridge + Proton Pass · GPL-3.0-only
+cask "blender"  # Blender · GPL-2.0-or-later
+cask "obs"  # OBS Studio · GPL-2.0-or-later

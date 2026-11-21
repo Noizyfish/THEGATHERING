@@ -14,6 +14,10 @@ Thirty years of work (1996 → today): two GitHub identities, an M2 Ultra, a she
 | **[empire/repos.json](empire/repos.json)** | Single source of truth: every repo across RSPNOIZY + Noizyfish, tiers, grouping rules, story anchors. |
 | **[empire/sources.json](empire/sources.json)** | Local roots to scan on the Mac + `/Volumes/*`. |
 | **[empire/STACK.md](empire/STACK.md)** | Forgejo + n8n + Claude + App Intents. All FOSS, self-hosted, one `docker compose up`. |
+| **[empire/foss/GREATEST_HITZ.md](empire/foss/GREATEST_HITZ.md)** | **FOSS GREATEST HITZ** — every open-source piece the empire runs on (license, role, install), the non-FOSS links and their exits. `scripts/foss install` rebuilds GOD from zero. |
+| **[noizystdz/](noizystdz/README.md)** | **NOIZYSTDZ** — BlackHole 16ch interactive studio → consent-gated **NOIZYVOX** corpus; 50 voices for Friday; **LINA**. |
+| **[engr/](engr/HOMEKIT.md)** | **ENGR** — Logic Pro / all apps / HomeKit control plane; 14-bit MIDI, Open Stage Control surface, NoizyKit (Apple frameworks). |
+| **[noizybeast/](noizybeast/README.md)** | **NOIZYBEAST.IDE** — Tauri + RustDesk window onto all of it. |
 | **[empire/shortcuts/README.md](empire/shortcuts/README.md)** | Siri / Shortcuts on every device. |
 
 ```sh
@@ -22,7 +26,9 @@ scripts/gather-local.sh --docs       # on the M2 Ultra: inventory repos, loose p
 scripts/gather-local.sh --push       # …and push every local git repo into Forgejo
 scripts/mirror-to-forgejo.sh --all   # pull-mirror every GitHub repo into Forgejo
 scripts/gather-google.sh             # Drive inventory via rclone (or the n8n Google workflow)
+scripts/gather-claude.sh             # Claude Code memory/sessions/worktrees on GOD → Noizyfish/CLAUDE-TODAY
 node scripts/build-empire.mjs        # regenerate empire/EMPIRE.md
+scripts/foss install                 # FOSS GREATEST HITZ: Brewfile + uv + npm → GOD rebuilt from zero; `scripts/foss check` = doctor
 scripts/empire ask "what did I build in April 2026?"
 ```
 

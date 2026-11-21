@@ -1,0 +1,2 @@
+#!/bin/bash
+exec "${ENGR_PY:-python3}" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/engr.py" "$@"
